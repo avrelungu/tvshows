@@ -1,0 +1,215 @@
+# Production Configuration - Live environment
+spring:
+  config:
+    activate:
+      on-profile: prod
+
+  # Database Configuration - Production cluster
+  datasource:
+    type: com.zaxxer.hikari.HikariDataSource
+    url: ${DB_URL}
+    username: ${DB_USER}
+    password: ${DB_PASSWORD}
+    hikari:
+      poolName: HikariPool-Prod
+      auto-commit: false
+      maximum-pool-size: 20
+      minimum-idle: 10
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+      leak-detection-threshold: 60000
+      connection-test-query: SELECT 1
+      validation-timeout: 5000
+
+  # JPA Configuration
+  jpa:
+    hibernate:
+      ddl-auto: none # Never auto-update schema in production
+    show-sql: false
+    properties:
+      hibernate:
+        generate_statistics: false
+        jdbc:
+          batch_size: 50
+          order_inserts: true
+          order_updates: true
+        query:
+          in_clause_parameter_padding: true
+          plan_cache_max_size: 2048
+          plan_parameter_metadata_max_size: 128
+
+  # Security - Production OAuth2/JWT
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${JWT_ISSUER_URI}
+          jwk-set-uri: ${JWT_JWK_SET_URI}
+
+# Server Configuration
+server:
+  port: ${SERVER_PORT:8080}
+  error:
+    include-message: never
+    include-stacktrace: never
+    include-binding-errors: never
+    whitelabel:
+      enabled: false
+  compression:
+    enabled: true
+    mime-types: text/html,text/xml,text/plain,text/css,text/javascript,application/javascript,application/json
+    min-response-size: 2048
+  http2:
+    enabled: true
+  forward-headers-strategy: native
+  tomcat:
+    threads:
+      max: 200
+      min-spare: 25
+    accept-count: 100
+    max-connections: 10000
+    connection-timeout: 20000
+
+# Actuator - Minimal exposure
+management:
+  endpoints:
+    web:
+      exposure:
+        include: ["health", "metrics", "prometheus"]
+      base-path: /internal/management
+  endpoint:
+    health:
+      show-details: never
+      show-components: when_authorized
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+      cloudwatch:
+        enabled: true
+        namespace: TVShows/Production
+        step: 1m
+    tags:
+      application: ${spring.application.name}
+      environment: production
+      region: ${AWS_REGION:us-east-1}
+
+# Logging - Production level
+logging:
+  level:
+    ROOT: WARN
+    com.example.tvshows_auth: INFO
+    org.springframework.web: WARN
+    org.springframework.security: WARN
+    org.hibernate: ERROR
+  file:
+    name: /var/log/tvshows/tvshows-prod.log
+    max-size: 50MB
+    max-history: 90
+    total-size-cap: 10GB
+  pattern:
+    console: "%d{ISO8601} %5p [%t] %c{1} [%X{correlationId}] - %m%n"
+    file: "%d{ISO8601} %5p [%t] %c [%X{correlationId}] [%X{userId}] - %m%n"
+  logback:
+    rollingpolicy:
+      clean-history-on-start: false
+
+# Application Configuration
+app:
+  security:
+    cors:
+      allowed-origins: ${CORS_ALLOWED_ORIGINS}
+      allowed-methods: ["GET", "POST", "PUT", "DELETE"]
+      allow-credentials: true
+      max-age: 86400
+    authentication:
+      jwt:
+        secret: ${JWT_SECRET}
+        token-validity-in-seconds: 3600 # 1 hour
+        token-validity-in-seconds-for-remember-me: 1209600 # 2 weeks
+    content-security-policy: "default-src 'self'; frame-ancestors 'none'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://api.example.com"
+
+  # Rate Limiting - Strict
+  rate-limiting:
+    enabled: true
+    default-limit: 100
+    default-duration: PT1M # 1 minute
+    ip-based: true
+    user-based: true
+    endpoints:
+      - path: /api/auth/**
+        limit: 5
+        duration: PT1M
+      - path: /api/public/**
+        limit: 1000
+        duration: PT1H
+
+  # Features - Production flags
+  features:
+    enable-new-ui: false
+    enable-beta-features: false
+    enable-analytics: true
+
+  # External Services
+  external-services:
+    mock-enabled: false
+    base-urls:
+      user-service: ${USER_SERVICE_URL}
+      notification-service: ${NOTIFICATION_SERVICE_URL}
+    timeout-seconds: 30
+    retry-attempts: 3
+    circuit-breaker:
+      enabled: true
+      failure-threshold: 5
+      success-threshold: 3
+      delay: 30s
+
+  # Cache Configuration
+  cache:
+    time-to-live-seconds: 3600 # 1 hour
+    redis:
+      time-to-live-seconds: 3600
+      key-prefix: "tvshows:prod:"
+      enable-statistics: true
+
+# API Documentation - Disabled in production
+springdoc:
+  api-docs:
+    enabled: false
+  swagger-ui:
+    enabled: false
+
+# Production-specific configurations
+resilience4j:
+  circuitbreaker:
+    instances:
+      backend:
+        failure-rate-threshold: 50
+        slow-call-rate-threshold: 50
+        slow-call-duration-threshold: 10s
+        permitted-number-of-calls-in-half-open-state: 10
+        sliding-window-size: 100
+        minimum-number-of-calls: 20
+        wait-duration-in-open-state: 60s
+  retry:
+    instances:
+      backend:
+        max-attempts: 3
+        wait-duration: 1s
+        retry-exceptions:
+          - java.net.ConnectException
+          - java.io.IOException
+  bulkhead:
+    instances:
+      backend:
+        max-concurrent-calls: 100
+        max-wait-duration: 10ms
+
+# AWS Configuration (if using AWS)
+cloud:
+  aws:
+    region:
+      static: ${AWS_REGION:us-east-1}
+    stack:
+      auto: false

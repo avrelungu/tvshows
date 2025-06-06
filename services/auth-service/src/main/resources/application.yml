@@ -1,0 +1,142 @@
+# Base configuration - shared across all environments
+spring:
+  application:
+    name: auth-service
+  sql:
+    init:
+      mode: always
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://localhost:5432/mydatabase
+    username: myuser
+    password: secret
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    hibernate:
+      ddl-auto: create-drop
+  
+  # Actuator
+  actuator:
+    endpoints:
+      web:
+        base-path: /management
+        exposure:
+          include: ["health", "info", "metrics", "prometheus"]
+  
+  # Servlet Configuration
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+
+# Server Configuration
+server:
+  port: 8081
+  compression:
+    enabled: true
+  error:
+    include-message: never
+    include-stacktrace: never
+  forward-headers-strategy: native
+  shutdown: graceful
+  servlet:
+    session:
+      cookie:
+        http-only: true
+        secure: true
+        same-site: strict
+
+# Management Configuration
+management:
+  endpoints:
+    web:
+      base-path: /management
+      exposure:
+        include: ["configprops", "env", "health", "info", "logfile", "loggers", "prometheus", "threaddump", "caches", "scheduledtasks"]
+  endpoint:
+    health:
+      show-details: when_authorized
+      probes:
+        enabled: true
+  info:
+    env:
+      enabled: true
+    java:
+      enabled: true
+    os:
+      enabled: true
+  metrics:
+    enable:
+      http: true
+      jvm: true
+      logback: true
+      process: true
+      system: true
+    distribution:
+      percentiles-histogram:
+        all: true
+      percentiles:
+        all: 0.0, 0.5, 0.75, 0.95, 0.99, 1.0
+    web:
+      server:
+        request:
+          autotime:
+            enabled: true
+
+# OpenAPI/Swagger Configuration
+springdoc:
+  api-docs:
+    enabled: true
+    path: /v3/api-docs
+  swagger-ui:
+    enabled: true
+    path: /swagger-ui.html
+    operations-sorter: method
+    tags-sorter: alpha
+  show-actuator: true
+
+# Application-specific Configuration
+app:
+  security:
+    authentication:
+      jwt:
+        token-validity-in-seconds: 86400 # 1 day
+        token-validity-in-seconds-for-remember-me: 2592000 # 30 days
+    cors:
+      allowed-origins: ["http://localhost:3000"]
+      allowed-methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
+      allowed-headers: ["*"]
+      exposed-headers: ["Authorization", "Content-Disposition"]
+      allow-credentials: true
+      max-age: 3600
+  
+  # API Rate Limiting
+  rate-limiting:
+    enabled: true
+    default-limit: 100
+    default-duration: PT1H # 1 hour
+
+  # Caching
+  cache:
+    time-to-live-seconds: 3600
+    redis:
+      time-to-live-seconds: 3600
+
+  # Feature Flags
+  features:
+    enable-new-ui: false
+    enable-beta-features: false
+    enable-analytics: true
+
+# Logging Configuration
+logging:
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  level:
+    ROOT: INFO
+    com.example.tvshows_auth: DEBUG
+    org.springframework.web: INFO
+    org.springframework.security: INFO
+    org.hibernate: INFO
+

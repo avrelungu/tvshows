@@ -1,0 +1,161 @@
+# Staging Configuration - Pre-production environment
+spring:
+  config:
+    activate:
+      on-profile: stage
+
+  # Database Configuration
+  datasource:
+    type: com.zaxxer.hikari.HikariDataSource
+    url: ${DB_URL:jdbc:postgresql://stage-db.example.com:5432/tvshows_stage}
+    username: ${DB_USER:tvshows_stage}
+    password: ${DB_PASSWORD}
+    hikari:
+      poolName: HikariPool-Stage
+      auto-commit: false
+      maximum-pool-size: 10
+      minimum-idle: 5
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+      leak-detection-threshold: 60000
+
+  # JPA Configuration
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate:
+        generate_statistics: false
+        jdbc:
+          batch_size: 25
+        query:
+          in_clause_parameter_padding: true
+
+  # Redis Configuration
+  data:
+    redis:
+      host: ${REDIS_HOST:stage-redis.example.com}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD}
+      timeout: 5000ms
+      lettuce:
+        pool:
+          max-active: 16
+          max-idle: 8
+          min-idle: 4
+        cluster:
+          refresh:
+            adaptive: true
+            period: 30s
+
+  # Security
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${JWT_ISSUER_URI:https://stage-auth.example.com/auth/realms/tvshows}
+          jwk-set-uri: ${JWT_JWK_SET_URI:https://stage-auth.example.com/auth/realms/tvshows/protocol/openid-connect/certs}
+
+# Server Configuration
+server:
+  port: ${SERVER_PORT:8080}
+  error:
+    include-message: never
+    include-stacktrace: on_param
+  compression:
+    enabled: true
+    mime-types: text/html,text/xml,text/plain,text/css,text/javascript,application/javascript,application/json
+    min-response-size: 1024
+
+# Actuator - Limited exposure
+management:
+  endpoints:
+    web:
+      exposure:
+        include: ["health", "info", "metrics", "prometheus", "loggers"]
+  endpoint:
+    health:
+      show-details: when_authorized
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+
+# Logging Configuration
+logging:
+  level:
+    ROOT: INFO
+    com.example.tvshows_auth: INFO
+    org.springframework.web: INFO
+    org.springframework.security: WARN
+    org.hibernate: WARN
+  file:
+    name: /var/log/tvshows/tvshows-stage.log
+    max-size: 10MB
+    max-history: 30
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %X{correlationId} - %msg%n"
+
+# Application Configuration
+app:
+  security:
+    cors:
+      allowed-origins: ["https://stage.example.com", "https://stage-admin.example.com"]
+      allowed-methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
+    authentication:
+      jwt:
+        secret: ${JWT_SECRET}
+        token-validity-in-seconds: 3600 # 1 hour
+        token-validity-in-seconds-for-remember-me: 604800 # 1 week
+
+  # Rate Limiting
+  rate-limiting:
+    enabled: true
+    default-limit: 1000
+    default-duration: PT1H
+    ip-based: true
+
+  # Features - Testing new features
+  features:
+    enable-new-ui: true
+    enable-beta-features: true
+    enable-analytics: true
+
+  # External Services
+  external-services:
+    mock-enabled: false
+    base-urls:
+      user-service: https://stage-user-service.example.com
+      notification-service: https://stage-notification.example.com
+    timeout-seconds: 30
+    retry-attempts: 3
+
+  # Cache Configuration
+  cache:
+    time-to-live-seconds: 1800 # 30 minutes
+    redis:
+      time-to-live-seconds: 1800
+      key-prefix: "tvshows:stage:"
+
+# API Documentation - Available but secured
+springdoc:
+  api-docs:
+    enabled: true
+    path: /v3/api-docs
+  swagger-ui:
+    enabled: true
+    path: /swagger-ui.html
+    urls-primary-name: Stage API
+  show-actuator: false
+
+# Monitoring
+monitoring:
+  metrics:
+    export:
+      cloudwatch:
+        enabled: true
+        namespace: TVShows/Stage
+        step: 1m

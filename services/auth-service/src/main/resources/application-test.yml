@@ -1,0 +1,98 @@
+# Test Configuration - Used for running tests
+spring:
+  config:
+    activate:
+      on-profile: test
+
+  # JPA Test Configuration
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
+        generate_statistics: false
+
+  # Disable Redis for tests (use embedded)
+  data:
+    redis:
+      repositories:
+        enabled: false
+  cache:
+    type: simple
+
+  # Security - Simplified for tests
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:8080/auth/realms/test
+          public-key-location: classpath:public-key.pem
+
+  # Test profiles
+  test:
+    database:
+      replace: none
+
+# Server Configuration
+server:
+  port: 0 # Random port for tests
+
+# Disable actuator endpoints for tests
+management:
+  endpoints:
+    enabled-by-default: false
+  health:
+    db:
+      enabled: false
+
+# Minimal logging for tests
+logging:
+  level:
+    ROOT: WARN
+    com.example.tvshows_auth: INFO
+    org.springframework.web: WARN
+    org.springframework.security: WARN
+    org.hibernate: WARN
+
+# Application Configuration
+app:
+  security:
+    authentication:
+      jwt:
+        secret: TestSecretKeyForJWTTokenGeneration
+        token-validity-in-seconds: 60 # 1 minute for tests
+    cors:
+      allowed-origins: ["http://localhost:3000"]
+
+  # Disable features for consistent tests
+  rate-limiting:
+    enabled: false
+
+  features:
+    enable-new-ui: false
+    enable-beta-features: false
+    enable-analytics: false
+
+  # Mock all external services
+  external-services:
+    mock-enabled: true
+    timeout-seconds: 1
+    retry-attempts: 0
+
+# Disable API documentation for tests
+springdoc:
+  api-docs:
+    enabled: false
+  swagger-ui:
+    enabled: false
+
+# Test-specific properties
+test:
+  security:
+    enabled: false # Can be toggled for security tests
+  async:
+    enabled: false # Run async operations synchronously in tests
+  scheduling:
+    enabled: false # Disable scheduled tasks in tests

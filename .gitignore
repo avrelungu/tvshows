@@ -1,0 +1,73 @@
+#############################
+# Global OS files
+#############################
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+#############################
+# IDE & Editor settings
+#############################
+# IntelliJ IDEA
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# Other editors (optional)
+.vscode/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+#############################
+# Angular (Frontend)
+#############################
+# Dependencies
+frontend/node_modules/
+
+# Build output
+frontend/dist/
+frontend/.angular/
+
+# Optional caches and logs
+frontend/.cache/
+frontend/npm-debug.log*
+frontend/yarn-debug.log*
+frontend/yarn-error.log*
+
+#############################
+# Spring / Java (Services)
+#############################
+# Maven output
+services/**/target/
+
+# Gradle output (if used)
+services/**/build/
+
+# Eclipse (if applicable)
+services/**/.classpath
+services/**/.project
+services/**/.settings/
+
+# IntelliJ compiled output (if any in services)
+services/**/*.iml
+
+#############################
+# Logs and temporary files
+#############################
+*.log
+*.tmp
+*.swp
+
+#############################
+# Environment files
+#############################
+.env
+
