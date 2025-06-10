@@ -18,13 +18,12 @@ import java.util.Date;
 @Component
 public class UserAuthProvider {
 
-    @Value("${security.jwt.token.secret-key:secret-key}")
+    @Value("${jwt.secret}")
     private String secretKey;
 
     @PostConstruct
     protected void init() {
         secretKey = Base64.getEncoder().encodeToString(secretKey.getBytes());
-
     }
 
     public String createToken(UserDto user) {
@@ -43,7 +42,6 @@ public class UserAuthProvider {
 
     public UsernamePasswordAuthenticationToken getToken(String token) {
         Algorithm algorithm = Algorithm.HMAC256(secretKey);
-
         JWTVerifier verifier = JWT.require(algorithm).build();
 
         DecodedJWT jwt = verifier.verify(token);

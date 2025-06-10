@@ -1,5 +1,6 @@
-package com.example.tvshows_auth.entities;
+package com.example.tvshows_auth.models;
 
+import com.example.tvshows_auth.enums.Role;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.security.core.GrantedAuthority;

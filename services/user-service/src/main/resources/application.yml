@@ -1,0 +1,6 @@
+spring:
+  application:
+    name: user-service
+
+auth_service:
+  url: http:localhost:8082

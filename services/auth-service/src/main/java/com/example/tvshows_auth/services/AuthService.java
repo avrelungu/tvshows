@@ -3,7 +3,7 @@ package com.example.tvshows_auth.services;
 import com.example.tvshows_auth.dto.CredentialDto;
 import com.example.tvshows_auth.dto.SignUpDto;
 import com.example.tvshows_auth.dto.UserDto;
-import com.example.tvshows_auth.entities.User;
+import com.example.tvshows_auth.models.User;
 import com.example.tvshows_auth.exceptions.AppException;
 import com.example.tvshows_auth.exceptions.UnsupportedVersionException;
 import com.example.tvshows_auth.mappers.UserMapper;
