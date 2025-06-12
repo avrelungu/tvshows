@@ -1,4 +1,4 @@
-package com.example.tvshows_auth.dto;
+package com.example.user_service.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -11,11 +11,11 @@ import java.util.UUID;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class UserDto {
+public class StoreUserProfileDto {
     private UUID id;
     private String username;
+    private String memberType;
     private String firstName;
     private String lastName;
-    private String token;
     private String email;
 }

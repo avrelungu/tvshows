@@ -11,11 +11,11 @@ import java.util.UUID;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class UserDto {
+public class UserProfileDto {
     private UUID id;
     private String username;
+    private String email;
+    private String memberType;
     private String firstName;
     private String lastName;
-    private String token;
-    private String email;
 }

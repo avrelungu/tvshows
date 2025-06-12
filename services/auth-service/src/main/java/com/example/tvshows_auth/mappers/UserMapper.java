@@ -1,7 +1,9 @@
 package com.example.tvshows_auth.mappers;
 
+import com.example.tvshows_auth.dto.LoginUserDto;
 import com.example.tvshows_auth.dto.SignUpDto;
 import com.example.tvshows_auth.dto.UserDto;
+import com.example.tvshows_auth.dto.UserProfileDto;
 import com.example.tvshows_auth.models.User;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -12,4 +14,8 @@ public interface UserMapper {
 
     @Mapping(target = "password", ignore = true)
     User signUpToUser(SignUpDto signUpDto);
+
+    UserProfileDto signUpToUserProfile(SignUpDto userDto);
+
+    LoginUserDto toLoginUserDto(User user);
 }

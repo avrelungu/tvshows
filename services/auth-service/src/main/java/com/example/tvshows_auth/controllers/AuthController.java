@@ -2,6 +2,7 @@ package com.example.tvshows_auth.controllers;
 
 import com.example.tvshows_auth.config.UserAuthProvider;
 import com.example.tvshows_auth.dto.CredentialDto;
+import com.example.tvshows_auth.dto.LoginUserDto;
 import com.example.tvshows_auth.dto.SignUpDto;
 import com.example.tvshows_auth.dto.UserDto;
 import com.example.tvshows_auth.exceptions.UnsupportedVersionException;
@@ -25,9 +26,8 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<UserDto> login(@RequestBody CredentialDto credentialDto, @RequestHeader(value = "X-API-Version", defaultValue = "v1") String apiVersion) throws UnsupportedVersionException {
-        UserDto userDto = authService.login(credentialDto, apiVersion);
-        userDto.setToken(this.userAuthProvider.createToken(userDto));
+    public ResponseEntity<LoginUserDto> login(@RequestBody CredentialDto credentialDto, @RequestHeader(value = "X-API-Version", defaultValue = "v1") String apiVersion) throws UnsupportedVersionException {
+        LoginUserDto userDto = authService.login(credentialDto, apiVersion);
 
         return ResponseEntity.ok(userDto);
     }
@@ -35,8 +35,14 @@ public class AuthController {
     @PostMapping("/register")
     public ResponseEntity<UserDto> register(@RequestBody SignUpDto signUpDto, @RequestHeader(value = "X-API-Version", defaultValue = "v1") String apiVersion) throws UnsupportedVersionException {
         UserDto userDto = authService.register(signUpDto, apiVersion);
-        userDto.setToken(this.userAuthProvider.createToken(userDto));
 
         return ResponseEntity.created(URI.create("/users/" + userDto.getId())).body(userDto);
+    }
+
+    @GetMapping("/{username}")
+    public ResponseEntity<UserDto> getUser(@PathVariable String username, @RequestHeader(value = "X-API-Version", defaultValue = "v1") String apiVersion) {
+        UserDto userDto = authService.getUser(username);
+
+        return ResponseEntity.ok(userDto);
     }
 }

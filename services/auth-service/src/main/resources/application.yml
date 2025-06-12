@@ -7,16 +7,19 @@ spring:
       mode: always
   datasource:
     driver-class-name: org.postgresql.Driver
-    url: jdbc:postgresql://localhost:5432/mydatabase
+    url: jdbc:postgresql://localhost:5432/auth_service
     username: myuser
     password: secret
   jpa:
     database-platform: org.hibernate.dialect.PostgreSQLDialect
     hibernate:
-      ddl-auto: create-only
+      ddl-auto: none
 
 jwt:
   secret: a3f9b1c8d4e7f0a3b9c2d1e8f6a7b4c5d3e2f1a9b8c7d6e5f4a3b2c1d0e9f8a7
+
+api-gateway:
+  url: http://localhost:8080
   
   # Actuator
   actuator:
@@ -137,9 +140,7 @@ logging:
     console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
     file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
   level:
-    ROOT: INFO
     com.example.tvshows_auth: DEBUG
-    org.springframework.web: INFO
-    org.springframework.security: INFO
-    org.hibernate: INFO
+    org.springframework.web: DEBUG
+    org.springframework.security: DEBUG
 

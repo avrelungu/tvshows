@@ -1,6 +1,34 @@
 spring:
   application:
     name: user-service
+  sql:
+    init:
+      mode: always
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://localhost:5433/user_service
+    username: myuser
+    password: secret
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    hibernate:
+      ddl-auto: none
 
-auth_service:
-  url: http:localhost:8082
+api-gateway:
+  url: http://localhost:8080
+
+server:
+  port: 8082
+  compression:
+    enabled: true
+  error:
+    include-message: never
+    include-stacktrace: never
+  forward-headers-strategy: native
+  shutdown: graceful
+  servlet:
+    session:
+      cookie:
+        http-only: true
+        secure: true
+        same-site: strict

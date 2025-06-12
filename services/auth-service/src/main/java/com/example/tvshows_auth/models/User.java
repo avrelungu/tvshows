@@ -8,6 +8,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.UUID;
 
 @AllArgsConstructor
 @NoArgsConstructor
@@ -17,22 +18,28 @@ import java.util.List;
 @Table(name = "app_user")
 public class User implements UserDetails {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @GeneratedValue(generator = "UUID")
+    @Column(updatable = false, nullable = false)
+    private UUID id;
 
-    @Column(unique = true, nullable = false, name = "firstName")
+    @Column(nullable = false, name = "firstName")
     private String firstName;
 
-    @Column(unique = true, nullable = false, name = "lastName")
+    @Column(nullable = false, name = "lastName")
     private String lastName;
 
     @Column(unique = true, nullable = false, name = "username")
     private String username;
 
+    @Column(unique = true, nullable = false, name = "email")
+    private String email;
+
     @Column(nullable = false, name = "password")
     private String password;
 
-    private Role role;
+    @Column(nullable = false, name = "role")
+    @Builder.Default
+    private Role role = Role.USER;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

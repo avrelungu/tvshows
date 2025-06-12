@@ -15,6 +15,12 @@ spring:
                 - Path=/api/auth/**
               filters:
                 - AddRequestHeader=X-API-Version, v1
+            - id: user-service
+              uri: http://localhost:8082
+              predicates:
+                - Path=/api/users/**
+              filters:
+                - AddRequestHeader=X-API-Version, v1
 
 jwt:
   secret: a3f9b1c8d4e7f0a3b9c2d1e8f6a7b4c5d3e2f1a9b8c7d6e5f4a3b2c1d0e9f8a7
