@@ -1,6 +1,7 @@
 package com.example.user_service.controllers;
 
 import com.example.user_service.dto.StoreUserProfileDto;
+import com.example.user_service.dto.UpgradeUserProfileDto;
 import com.example.user_service.dto.UserProfileDto;
 import com.example.user_service.exceptions.AppException;
 import com.example.user_service.mappers.UserProfileMapper;
@@ -22,11 +23,6 @@ public class UserProfileController {
         this.userProfileMapper = userProfileMapper;
     }
 
-//    @GetMapping("/${id}/profile")
-//    public ResponseEntity<> getProfile() {
-//
-//    }
-
     @PostMapping("/profile")
     public ResponseEntity<StoreUserProfileDto> getProfile(@RequestBody StoreUserProfileDto storeUserProfileDto, @RequestHeader(value = "X-API-Version", defaultValue = "v1") String apiVersion) throws AppException {
         UserProfile userProfile = userProfileService.storeUserProfile(storeUserProfileDto);
@@ -43,13 +39,10 @@ public class UserProfileController {
         return ResponseEntity.ok(userProfileDto);
     }
 
-//    @GetMapping("/watchlist")
-//    public ResponseEntity<> getWatchlist() {
-//
-//    }
-//
-//    @PostMapping("/upgrade")
-//    public ResponseEntity<> getUpgrade() {
-//
-//    }
+    @PostMapping("/upgrade")
+    public ResponseEntity<UserProfileDto> upgradeProfile(@RequestBody UpgradeUserProfileDto upgradeUserProfileDto) throws AppException {
+        UserProfileDto userProfileDto = userProfileService.upgradeProfile(upgradeUserProfileDto);
+
+        return ResponseEntity.ok(userProfileDto);
+    }
 }

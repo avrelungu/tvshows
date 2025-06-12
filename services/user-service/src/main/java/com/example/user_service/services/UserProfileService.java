@@ -1,7 +1,9 @@
 package com.example.user_service.services;
 
 import com.example.user_service.dto.StoreUserProfileDto;
+import com.example.user_service.dto.UpgradeUserProfileDto;
 import com.example.user_service.dto.UserProfileDto;
+import com.example.user_service.enums.MemberType;
 import com.example.user_service.exceptions.AppException;
 import com.example.user_service.exceptions.UserProfileNotFoundException;
 import com.example.user_service.mappers.UserProfileMapper;
@@ -48,5 +50,23 @@ public class UserProfileService {
         }
 
         return userProfileMapper.profileToUserProfileDto(userProfile.get());
+    }
+
+    public UserProfileDto upgradeProfile(UpgradeUserProfileDto upgradeUserProfileDto) throws AppException {
+        Optional<UserProfile> oUserProfile = userProfileRepository.findByUsername(upgradeUserProfileDto.getUsername());
+
+        if (oUserProfile.isEmpty()) {
+            throw new UserProfileNotFoundException("User Profile does not exist");
+        }
+
+        UserProfile userProfile = oUserProfile.get();
+
+        if (userProfile.getMemberType() == MemberType.PREMIUM) {
+            throw new AppException(userProfile.getUsername() + " already has a PREMIUM membership", HttpStatus.BAD_REQUEST);
+        }
+
+        userProfile.setMemberType(MemberType.PREMIUM);
+
+        return userProfileMapper.profileToUserProfileDto(userProfileRepository.save(userProfile));
     }
 }
