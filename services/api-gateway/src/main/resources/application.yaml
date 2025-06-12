@@ -15,10 +15,17 @@ spring:
                 - Path=/api/auth/**
               filters:
                 - AddRequestHeader=X-API-Version, v1
-            - id: user-service
+            - id: user-service-profiles
               uri: http://localhost:8082
               predicates:
                 - Path=/api/users/**
+                - Path=/api/watchlist/**
+              filters:
+                - AddRequestHeader=X-API-Version, v1
+            - id: user-service-watchlist
+              uri: http://localhost:8082
+              predicates:
+                - Path=/api/watchlist/**
               filters:
                 - AddRequestHeader=X-API-Version, v1
 

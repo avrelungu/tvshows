@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import lombok.Data;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 @Data
@@ -29,6 +30,9 @@ public class UserProfile {
     @Column(name = "member_type", nullable = false, length = 20)
     @Enumerated(EnumType.STRING)
     private MemberType memberType = MemberType.FREE;
+
+    @OneToMany(mappedBy = "userProfile", fetch = FetchType.LAZY)
+    private List<Watchlist> watchlists;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt = LocalDateTime.now();
