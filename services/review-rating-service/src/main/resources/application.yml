@@ -1,0 +1,29 @@
+spring:
+  application:
+    name: review-rating-service
+  sql:
+    init:
+      mode: always
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://localhost:5435/review_rating_service
+    username: myuser
+    password: secret
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    hibernate:
+      ddl-auto: none
+
+server:
+  port: 8084
+
+api-gateway:
+  url: http://localhost:8080
+
+user-service:
+  api:
+    url: http://localhost:8082
+
+tv-maze:
+  api:
+    url: https://api.tvmaze.com

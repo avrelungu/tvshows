@@ -1,7 +1,7 @@
-package com.example.user_service.config;
+package com.example.tvshows_service.config;
 
-import com.example.user_service.dto.ErrorResponse;
-import com.example.user_service.exceptions.AppException;
+import com.example.tvshows_service.dto.ErrorResponse;
+import com.example.tvshows_service.exceptions.AppException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -13,15 +13,15 @@ import java.time.LocalDateTime;
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(AppException.class)
-    public ResponseEntity<ErrorResponse> handleException(AppException ex, HttpServletRequest request) {
+    ResponseEntity<ErrorResponse> handleAppException(AppException ex, HttpServletRequest request) {
         ErrorResponse errorResponse = new ErrorResponse(
                 LocalDateTime.now(),
-                ex.getStatus().value(),
-                ex.getStatus().getReasonPhrase(),
+                ex.getHttpStatus().value(),
+                ex.getHttpStatus().getReasonPhrase(),
                 ex.getMessage(),
                 request.getRequestURI()
         );
 
-        return ResponseEntity.status(ex.getStatus().value()).body(errorResponse);
+        return ResponseEntity.status(ex.getHttpStatus().value()).body(errorResponse);
     }
 }
