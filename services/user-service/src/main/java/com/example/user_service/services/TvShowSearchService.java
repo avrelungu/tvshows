@@ -1,7 +1,9 @@
 package com.example.user_service.services;
 
 import com.example.user_service.dto.StoreShowsSearchDto;
+import com.example.user_service.dto.TvShowSearchHistoryDto;
 import com.example.user_service.exceptions.UserProfileNotFoundException;
+import com.example.user_service.mappers.TvShowSearchHistoryMapper;
 import com.example.user_service.models.TvShowSearchHistory;
 import com.example.user_service.models.UserProfile;
 import com.example.user_service.repositories.TvShowSearchHistoryRepository;
@@ -17,13 +19,15 @@ public class TvShowSearchService {
 
     private final UserProfileRepository userProfileRepository;
     private final TvShowSearchHistoryRepository tvShowSearchHistoryRepository;
+    private final TvShowSearchHistoryMapper tvShowSearchHistoryMapper;
 
     public TvShowSearchService(
             UserProfileRepository userProfileRepository,
-            TvShowSearchHistoryRepository tvShowSearchHistoryRepository
-    ) {
+            TvShowSearchHistoryRepository tvShowSearchHistoryRepository,
+            TvShowSearchHistoryMapper tvShowSearchHistoryMapper) {
         this.userProfileRepository = userProfileRepository;
         this.tvShowSearchHistoryRepository = tvShowSearchHistoryRepository;
+        this.tvShowSearchHistoryMapper = tvShowSearchHistoryMapper;
     }
 
 
@@ -46,5 +50,12 @@ public class TvShowSearchService {
         if (tvShowSearchHistoryList.size() > 10) {
             tvShowSearchHistoryRepository.deleteAll(tvShowSearchHistoryList.subList(10, tvShowSearchHistoryList.size()));
         }
+    }
+
+    public List<TvShowSearchHistoryDto> getSearchHistory(String username) throws UserProfileNotFoundException {
+        UserProfile userProfile = userProfileRepository.findByUsername(username).orElseThrow(UserProfileNotFoundException::new);
+
+        return tvShowSearchHistoryRepository.findByUserProfileOrderBySearchTimeDesc(userProfile)
+                .stream().map(tvShowSearchHistoryMapper::toDto).toList();
     }
 }
