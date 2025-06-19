@@ -7,12 +7,15 @@ import jakarta.persistence.Converter;
 
 import java.io.IOException;
 
-@Converter(autoApply = true)
-public class JsonNodeConverter implements AttributeConverter<JsonNode,String> {
-    public static final ObjectMapper mapper = new ObjectMapper();
+@Converter
+public class JsonNodeConverter implements AttributeConverter<JsonNode, String> {
+    private static final ObjectMapper mapper = new ObjectMapper();
 
     @Override
     public String convertToDatabaseColumn(JsonNode jsonNode) {
+        if (jsonNode == null) {
+            return null;
+        }
         try {
             return mapper.writeValueAsString(jsonNode);
         } catch (Exception e) {
@@ -21,9 +24,12 @@ public class JsonNodeConverter implements AttributeConverter<JsonNode,String> {
     }
 
     @Override
-    public JsonNode convertToEntityAttribute(String s) {
+    public JsonNode convertToEntityAttribute(String dbData) {
+        if (dbData == null || dbData.isEmpty()) {
+            return null;
+        }
         try {
-            return mapper.readTree(s);
+            return mapper.readTree(dbData);
         } catch (IOException e) {
             throw new IllegalArgumentException("Could not deserialize JsonNode", e);
         }

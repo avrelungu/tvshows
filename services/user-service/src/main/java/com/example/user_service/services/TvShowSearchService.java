@@ -6,11 +6,13 @@ import com.example.user_service.models.TvShowSearchHistory;
 import com.example.user_service.models.UserProfile;
 import com.example.user_service.repositories.TvShowSearchHistoryRepository;
 import com.example.user_service.repositories.UserProfileRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
 @Service
+@Slf4j
 public class TvShowSearchService {
 
     private final UserProfileRepository userProfileRepository;
@@ -25,8 +27,11 @@ public class TvShowSearchService {
     }
 
 
-    public void storeTvShowSearch(StoreShowsSearchDto storeShowsSearchDto) throws UserProfileNotFoundException {
-        UserProfile userProfile = userProfileRepository.findById(storeShowsSearchDto.getUserId())
+    public void storeTvShowSearch(String username, StoreShowsSearchDto storeShowsSearchDto) throws UserProfileNotFoundException {
+        log.info("Storing tv show search for {}", username);
+        log.info(storeShowsSearchDto.toString());
+
+        UserProfile userProfile = userProfileRepository.findByUsername(username)
                 .orElseThrow(UserProfileNotFoundException::new);
 
         TvShowSearchHistory tvShowSearchHistory = new TvShowSearchHistory();

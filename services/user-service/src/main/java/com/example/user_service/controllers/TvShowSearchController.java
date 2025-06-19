@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 
-@RequestMapping("/api/tv-shows")
+@RequestMapping("/api/users/search")
 public class TvShowSearchController {
 
     private TvShowSearchService watchlistService;
@@ -17,11 +17,12 @@ public class TvShowSearchController {
         this.watchlistService = watchlistService;
     }
 
-    @PostMapping("/store-search")
+    @PostMapping("/store/{username}")
     public ResponseEntity<Void> storeSearch(
+            @PathVariable String username,
             @RequestBody StoreShowsSearchDto storeShowsSearchDto
     ) throws UserProfileNotFoundException {
-        watchlistService.storeTvShowSearch(storeShowsSearchDto);
+        watchlistService.storeTvShowSearch(username, storeShowsSearchDto);
 
         return ResponseEntity.ok().build();
     }

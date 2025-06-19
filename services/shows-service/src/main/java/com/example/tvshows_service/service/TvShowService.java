@@ -1,6 +1,7 @@
 package com.example.tvshows_service.service;
 
 import com.example.tvshows_service.dto.TvShowDto;
+import com.example.tvshows_service.dto.external.StoreTvShowSearchDto;
 import com.example.tvshows_service.dto.external.StoreWatchlistDto;
 import com.example.tvshows_service.exceptions.TvShowsNotFoundException;
 import com.example.tvshows_service.filters.TvShowFilter;
@@ -9,6 +10,7 @@ import com.example.tvshows_service.mappers.TvShowMapper;
 import com.example.tvshows_service.models.TvShow;
 import com.example.tvshows_service.repositories.TvShowRepository;
 import com.example.tvshows_service.specifications.TvShowSpecification;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.*;
@@ -25,7 +27,10 @@ public class TvShowService {
     private final WebClient webClient;
 
     private final TvShowMapper tvShowMapper;
+
     private final WatchlistHelper watchlistHelper;
+
+    private final ObjectMapper objectMapper;
 
     @Value("${user-service.api.url}")
     private String userServiceUrl;
@@ -34,11 +39,12 @@ public class TvShowService {
 
     public TvShowService(
             TvShowRepository tvShowRepository,
-            WebClient webClient, TvShowMapper tvShowMapper, WatchlistHelper watchlistHelper) {
+            WebClient webClient, TvShowMapper tvShowMapper, WatchlistHelper watchlistHelper, ObjectMapper objectMapper) {
         this.tvShowRepository = tvShowRepository;
         this.webClient = webClient;
         this.tvShowMapper = tvShowMapper;
         this.watchlistHelper = watchlistHelper;
+        this.objectMapper = objectMapper;
     }
 
     public Page<TvShowDto> getTopRatedShows(int page, int size, String username) throws TvShowsNotFoundException {
@@ -53,7 +59,7 @@ public class TvShowService {
         return tvShowsPage;
     }
 
-    public Page<TvShowDto> getTvShows(int page, int size, TvShowFilter filter, String username) throws TvShowsNotFoundException {
+    public Page<TvShowDto> getTvShows(int page, int size, TvShowFilter filter, String username, String url) throws TvShowsNotFoundException {
         Pageable pageable = createPageable(page, size, filter.getSortBy(), filter.getSortOrder());
 
         Specification<TvShow> spec = Stream.of(
@@ -77,6 +83,17 @@ public class TvShowService {
         if (tvShowPage.isEmpty()) {
             throw new TvShowsNotFoundException();
         }
+
+        StoreTvShowSearchDto storeTvShowSearchDto = new StoreTvShowSearchDto();
+        storeTvShowSearchDto.setEndpoint(url);
+        storeTvShowSearchDto.setFilters(objectMapper.valueToTree(filter));
+
+        webClient.post()
+                .uri(userServiceUrl + "/api/users/search/store/" + username)
+                .bodyValue(storeTvShowSearchDto)
+                .retrieve()
+                .toBodilessEntity()
+                .block();
 
         return tvShowPage;
     }

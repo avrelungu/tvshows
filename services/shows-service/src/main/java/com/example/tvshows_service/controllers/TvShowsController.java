@@ -5,6 +5,7 @@ import com.example.tvshows_service.exceptions.TvShowsNotFoundException;
 import com.example.tvshows_service.filters.TvShowFilter;
 import com.example.tvshows_service.service.TvMazeSyncService;
 import com.example.tvshows_service.service.TvShowService;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -30,9 +31,10 @@ public class TvShowsController {
             @ModelAttribute TvShowFilter tvShowFilter,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
-            @RequestHeader(name = "X-Auth-Username", defaultValue = "") String username
+            @RequestHeader(name = "X-Auth-Username", defaultValue = "") String username,
+            HttpServletRequest request
     ) throws TvShowsNotFoundException {
-        Page<TvShowDto> tvShowPage = tvShowService.getTvShows(page, size, tvShowFilter, username);
+        Page<TvShowDto> tvShowPage = tvShowService.getTvShows(page, size, tvShowFilter, username, request.getRequestURL().toString());
 
         return ResponseEntity.ok(tvShowPage);
     }
