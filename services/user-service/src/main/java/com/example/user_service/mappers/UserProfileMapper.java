@@ -12,6 +12,7 @@ import java.util.Optional;
 public interface UserProfileMapper {
     StoreUserProfileDto userProfileToStoreUserProfileDto(UserProfile userProfile);
 
+    @Mapping(target = "id", ignore = true)
     UserProfile userProfileDtoToUserProfile(StoreUserProfileDto storeUserProfileDto);
 
     UserProfileDto profileToUserProfileDto(UserProfile userProfile);

@@ -56,7 +56,7 @@ public class UserProfileService {
         Optional<UserProfile> oUserProfile = userProfileRepository.findByUsername(upgradeUserProfileDto.getUsername());
 
         if (oUserProfile.isEmpty()) {
-            throw new UserProfileNotFoundException("User Profile does not exist");
+            throw new UserProfileNotFoundException();
         }
 
         UserProfile userProfile = oUserProfile.get();

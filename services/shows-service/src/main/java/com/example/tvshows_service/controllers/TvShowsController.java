@@ -1,20 +1,14 @@
 package com.example.tvshows_service.controllers;
 
-import com.example.tvshows_service.assembler.TvShowModelAssembler;
 import com.example.tvshows_service.dto.TvShowDto;
 import com.example.tvshows_service.exceptions.TvShowsNotFoundException;
 import com.example.tvshows_service.filters.TvShowFilter;
-import com.example.tvshows_service.models.TvShow;
 import com.example.tvshows_service.service.TvMazeSyncService;
 import com.example.tvshows_service.service.TvShowService;
 import org.springframework.data.domain.Page;
-import org.springframework.data.web.PagedResourcesAssembler;
-import org.springframework.hateoas.PagedModel;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDateTime;
-import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 @RestController
@@ -22,42 +16,43 @@ import java.util.concurrent.CompletableFuture;
 public class TvShowsController {
     private final TvShowService tvShowService;
     private final TvMazeSyncService tvMazeSyncService;
-    private final TvShowModelAssembler tvShowModelAssembler;
 
     public TvShowsController(
             TvShowService tvShowService,
-            TvMazeSyncService tvMazeSyncService,
-            TvShowModelAssembler tvShowModelAssembler) {
+            TvMazeSyncService tvMazeSyncService
+    ) {
         this.tvShowService = tvShowService;
         this.tvMazeSyncService = tvMazeSyncService;
-        this.tvShowModelAssembler = tvShowModelAssembler;
     }
 
     @GetMapping
-    public ResponseEntity<PagedModel<TvShowDto>> getTvShows(
+    public ResponseEntity<Page<TvShowDto>> getTvShows(
             @ModelAttribute TvShowFilter tvShowFilter,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
-            PagedResourcesAssembler<TvShow> pagedResourcesAssembler
+            @RequestHeader(name = "X-Auth-Username", defaultValue = "") String username
     ) throws TvShowsNotFoundException {
-        Page<TvShow> tvShowPage = tvShowService.getTvShows(page, size, tvShowFilter);
+        Page<TvShowDto> tvShowPage = tvShowService.getTvShows(page, size, tvShowFilter, username);
 
-        PagedModel<TvShowDto> tvShows = pagedResourcesAssembler.toModel(tvShowPage, tvShowModelAssembler);
-
-        return ResponseEntity.ok(tvShows);
+        return ResponseEntity.ok(tvShowPage);
     }
 
     @GetMapping("/top-rated")
-    public ResponseEntity<PagedModel<TvShowDto>> topRatedShows(
+    public ResponseEntity<Page<TvShowDto>> topRatedShows(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
-            PagedResourcesAssembler<TvShow> pagedResourcesAssembler
+            @RequestHeader(name = "X-Auth-Username", defaultValue = "") String username
     ) throws TvShowsNotFoundException {
-        Page<TvShow> showList = tvShowService.getTopRatedShows(page, size);
+        Page<TvShowDto> showList = tvShowService.getTopRatedShows(page, size, username);
 
-        PagedModel<TvShowDto> tvShowDtoPagedModel = pagedResourcesAssembler.toModel(showList, tvShowModelAssembler);
+        return ResponseEntity.ok(showList);
+    }
 
-        return ResponseEntity.ok(tvShowDtoPagedModel);
+    @PostMapping("/{tvShowId}/watchlist/{username}")
+    public ResponseEntity<Void> watchlist(@PathVariable("tvShowId") long tvShowId, @PathVariable("username") String username) throws TvShowsNotFoundException {
+        tvShowService.addToWatchList(tvShowId, username);
+
+        return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/sync")

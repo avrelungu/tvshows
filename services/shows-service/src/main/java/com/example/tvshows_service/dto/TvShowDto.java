@@ -41,4 +41,7 @@ public class TvShowDto extends RepresentationModel<TvShowDto> {
     private int tvrage;
     private int thetvdb;
     private String imdb;
+
+    // Add to Watchlist
+    private String watchlistUrl;
 }

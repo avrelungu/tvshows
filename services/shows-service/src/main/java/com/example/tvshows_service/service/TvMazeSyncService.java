@@ -1,6 +1,7 @@
 package com.example.tvshows_service.service;
 
 import com.example.tvshows_service.dto.external.TvMazeShowDto;
+import com.example.tvshows_service.helpers.WatchlistHelper;
 import com.example.tvshows_service.mappers.TvShowMapper;
 import com.example.tvshows_service.models.Genre;
 import com.example.tvshows_service.models.TvShow;
@@ -24,6 +25,7 @@ public class TvMazeSyncService {
     private final TvShowRepository tvShowRepository;
     private final GenreRepository genreRepository;
     private final TvShowMapper tvShowMapper;
+    private final WatchlistHelper watchlistHelper;
 
     @Value("${tv-maze.api.url}")
     private String tvMazeUrl;
@@ -33,11 +35,13 @@ public class TvMazeSyncService {
     public TvMazeSyncService(WebClient webClient,
                              TvShowRepository tvShowRepository,
                              GenreRepository genreRepository,
-                             TvShowMapper tvShowMapper) {
+                             TvShowMapper tvShowMapper,
+                             WatchlistHelper watchlistHelper) {
         this.webClient = webClient;
         this.tvShowRepository = tvShowRepository;
         this.genreRepository = genreRepository;
         this.tvShowMapper = tvShowMapper;
+        this.watchlistHelper = watchlistHelper;
     }
 
     @Transactional

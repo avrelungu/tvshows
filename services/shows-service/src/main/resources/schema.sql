@@ -1,6 +1,6 @@
 CREATE TABLE IF NOT EXISTS tv_shows (
-                                        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    tvshow_id BIGINT NOT NULL UNIQUE,
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    tv_show_id BIGINT NOT NULL UNIQUE,
     name VARCHAR(255) NOT NULL,
     type VARCHAR(50),
     language VARCHAR(50),
@@ -34,4 +34,4 @@ CREATE TABLE IF NOT EXISTS tv_show_genres (
                                               PRIMARY KEY (tv_show_id, genre_id),
     FOREIGN KEY (tv_show_id) REFERENCES tv_shows(id) ON DELETE CASCADE,
     FOREIGN KEY (genre_id) REFERENCES genres(id) ON DELETE CASCADE
-    );
+);

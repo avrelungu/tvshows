@@ -1,18 +1,18 @@
 package com.example.user_service.controllers;
 
+import com.example.user_service.dto.StoreShowsSearchDto;
+import com.example.user_service.dto.StoreWatchlistDto;
 import com.example.user_service.dto.WatchlistDto;
+import com.example.user_service.exceptions.AppException;
 import com.example.user_service.exceptions.UserProfileNotFoundException;
 import com.example.user_service.services.WatchlistService;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/watchlist")
+@RequestMapping("/api/users/watchlist")
 public class WatchlistController {
 
     private final WatchlistService watchlistService;
@@ -22,9 +22,21 @@ public class WatchlistController {
     }
 
     @GetMapping("/{username}")
-    public ResponseEntity<List<WatchlistDto>> getWatchlist(@PathVariable String username) throws UserProfileNotFoundException {
+    public ResponseEntity<List<WatchlistDto>> getWatchlist(
+            @PathVariable String username
+    ) throws UserProfileNotFoundException {
         List<WatchlistDto> watchlistDtos = watchlistService.getWatchlistForUserProfile(username);
 
         return ResponseEntity.ok(watchlistDtos);
+    }
+
+    @PostMapping("/{username}")
+    public ResponseEntity<Void> addToWatchList(
+            @PathVariable String username,
+            @RequestBody StoreWatchlistDto storeWatchlistDto
+    ) throws AppException {
+        watchlistService.addToWatchList(username, storeWatchlistDto);
+
+        return ResponseEntity.ok().build();
     }
 }

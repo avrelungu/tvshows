@@ -1,6 +1,7 @@
 package com.example.tvshows_service.mappers;
 
 import com.example.tvshows_service.dto.TvShowDto;
+import com.example.tvshows_service.dto.external.StoreWatchlistDto;
 import com.example.tvshows_service.dto.external.TvMazeShowDto;
 import com.example.tvshows_service.models.Genre;
 import com.example.tvshows_service.models.TvShow;
@@ -17,6 +18,7 @@ public interface TvShowMapper {
 
     @Mapping(target = "id", source = "tvShowId")
     @Mapping(target = "genres", source = "genres")
+    @Mapping(target = "watchlistUrl", ignore = true)
     TvShowDto tvShowToDto(TvShow tvShow);
 
     List<TvShowDto> tvShowsToDto(List<TvShow> tvShows);
@@ -38,7 +40,7 @@ public interface TvShowMapper {
     @Mapping(target = "thetvdb", source = "externals.thetvdb")
     @Mapping(target = "scheduleTime", source = "schedule.time")
     @Mapping(target = "scheduleDays", source = "schedule.days")
-    @Mapping(target = "genres", ignore = true) // We'll update genres manually if needed
+    @Mapping(target = "genres", ignore = true)
     TvShow mazeDtoToTvShow(TvMazeShowDto tvMazeShowDto);
 
     List<TvShow> mazeDtoToTvShowList(List<TvMazeShowDto> tvMazeShowDtos);
@@ -53,10 +55,11 @@ public interface TvShowMapper {
     @Mapping(target = "thetvdb", source = "externals.thetvdb")
     @Mapping(target = "scheduleTime", source = "schedule.time")
     @Mapping(target = "scheduleDays", source = "schedule.days")
-    @Mapping(target = "genres", ignore = true) // update genres manually if needed
+    @Mapping(target = "genres", ignore = true)
     void updateTvShowFromMazeTvShowDto(TvMazeShowDto tvMazeShowDto, @MappingTarget TvShow tvShow);
 
-    // --- Custom mapping methods for genres ---
+    @Mapping(target = "description", source = "summary")
+    StoreWatchlistDto tvShowToStoreWatchlistDto(TvShow tvShow);
 
     default List<String> mapGenresToNames(Set<Genre> genres) {
         if (genres == null) return null;
@@ -67,7 +70,6 @@ public interface TvShowMapper {
 
     default Set<Genre> mapNamesToGenres(List<String> names) {
         if (names == null) return null;
-        // Just create Genre with names only (id null), actual persistence must resolve them properly
         return names.stream()
                 .map(name -> {
                     Genre g = new Genre();

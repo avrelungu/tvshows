@@ -11,4 +11,8 @@ public class UserProfileNotFoundException extends AppException {
     public UserProfileNotFoundException(String exceptionMessage, HttpStatus httpStatus) {
         super(exceptionMessage, httpStatus);
     }
+
+    public UserProfileNotFoundException() {
+        super("User Profile does not exist", HttpStatus.NOT_FOUND);
+    }
 }
