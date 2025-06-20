@@ -5,6 +5,7 @@ import com.example.tvshows_service.dto.external.StoreTvShowSearchDto;
 import com.example.tvshows_service.dto.external.StoreWatchlistDto;
 import com.example.tvshows_service.exceptions.TvShowsNotFoundException;
 import com.example.tvshows_service.filters.TvShowFilter;
+import com.example.tvshows_service.helpers.ReviewHelper;
 import com.example.tvshows_service.helpers.WatchlistHelper;
 import com.example.tvshows_service.mappers.TvShowMapper;
 import com.example.tvshows_service.models.TvShow;
@@ -31,6 +32,7 @@ public class TvShowService {
     private final WatchlistHelper watchlistHelper;
 
     private final ObjectMapper objectMapper;
+    private final ReviewHelper reviewHelper;
 
     @Value("${user-service.api.url}")
     private String userServiceUrl;
@@ -39,12 +41,13 @@ public class TvShowService {
 
     public TvShowService(
             TvShowRepository tvShowRepository,
-            WebClient webClient, TvShowMapper tvShowMapper, WatchlistHelper watchlistHelper, ObjectMapper objectMapper) {
+            WebClient webClient, TvShowMapper tvShowMapper, WatchlistHelper watchlistHelper, ObjectMapper objectMapper, ReviewHelper reviewHelper) {
         this.tvShowRepository = tvShowRepository;
         this.webClient = webClient;
         this.tvShowMapper = tvShowMapper;
         this.watchlistHelper = watchlistHelper;
         this.objectMapper = objectMapper;
+        this.reviewHelper = reviewHelper;
     }
 
     public Page<TvShowDto> getTopRatedShows(int page, int size, String username) throws TvShowsNotFoundException {
@@ -78,7 +81,8 @@ public class TvShowService {
                 .orElse(null);
 
         Page<TvShowDto> tvShowPage = tvShowRepository.findAll(spec, pageable)
-                .map(tvShow -> addWatchListUrl(tvShow, username));
+                .map(tvShow -> addWatchListUrl(tvShow, username))
+                .map(tvShowDto -> addReviewUrl(tvShowDto, username));
 
         if (tvShowPage.isEmpty()) {
             throw new TvShowsNotFoundException();
@@ -121,6 +125,12 @@ public class TvShowService {
         }
 
         tvShowDto.setWatchlistUrl(watchlistHelper.createAddToWatchlistUrl(tvShowDto.getId(), username));
+
+        return tvShowDto;
+    }
+
+    private TvShowDto addReviewUrl(TvShowDto tvShowDto, String username) {
+        tvShowDto.setReviewUrl(reviewHelper.createReviewUrl(tvShowDto.getId(), username));
 
         return tvShowDto;
     }

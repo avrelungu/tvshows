@@ -1,4 +1,4 @@
-package com.example.tvshows_auth.enums;
+package com.example.review_rating_service.enums;
 
 import lombok.Getter;
 

@@ -24,6 +24,10 @@ user-service:
   api:
     url: http://localhost:8082
 
+review-rating-service:
+  api:
+    url: http://localhost:8084
+
 tv-maze:
   api:
     url: https://api.tvmaze.com

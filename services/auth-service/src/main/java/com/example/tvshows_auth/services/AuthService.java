@@ -7,12 +7,14 @@ import com.example.tvshows_auth.exceptions.AppException;
 import com.example.tvshows_auth.exceptions.UnsupportedVersionException;
 import com.example.tvshows_auth.mappers.UserMapper;
 import com.example.tvshows_auth.repositories.UserRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
 
+@Slf4j
 @Service
 public class AuthService {
     private final PasswordEncoder passwordEncoder;
@@ -66,6 +68,8 @@ public class AuthService {
         }
 
         User user = userMapper.signUpToUser(signUpDto);
+
+        log.info("Registered user: {}", user);
 
         user.setPassword(passwordEncoder.encode(signUpDto.password()));
 

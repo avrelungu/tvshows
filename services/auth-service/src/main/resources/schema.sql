@@ -8,5 +8,5 @@ CREATE TABLE if not exists app_user
     username  VARCHAR(255) NOT NULL UNIQUE,
     email  VARCHAR(255) NOT NULL UNIQUE,
     password  VARCHAR(255) NOT NULL,
-    role      INTEGER      NOT NULL
+    role      VARCHAR(255)      NOT NULL
 );

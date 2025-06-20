@@ -2,11 +2,9 @@ package com.example.user_service.models;
 
 import com.example.user_service.converter.JsonNodeConverter;
 import com.fasterxml.jackson.databind.JsonNode;
-import io.hypersistence.utils.hibernate.type.json.JsonType;
 import jakarta.persistence.*;
 import lombok.Data;
 import org.hibernate.annotations.ColumnTransformer;
-import org.hibernate.annotations.Type;
 
 import java.time.LocalDateTime;
 import java.util.UUID;

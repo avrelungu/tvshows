@@ -24,6 +24,6 @@ user-service:
   api:
     url: http://localhost:8082
 
-tv-maze:
+shows-service:
   api:
-    url: https://api.tvmaze.com
+    url: http://localhost:8083

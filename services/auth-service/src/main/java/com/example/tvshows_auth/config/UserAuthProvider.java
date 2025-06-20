@@ -6,6 +6,7 @@ import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.example.tvshows_auth.dto.UserDto;
 import jakarta.annotation.PostConstruct;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.stereotype.Component;
@@ -16,6 +17,7 @@ import java.util.Collections;
 import java.util.Date;
 
 @Component
+@Slf4j
 public class UserAuthProvider {
 
     @Value("${jwt.secret}")
@@ -30,12 +32,15 @@ public class UserAuthProvider {
         Date now = Date.from(Instant.now());
         Date validity = new Date(now.getTime() + 1000 * 60 * 60);
 
+        log.info("user role {}", user.getRole());
+
         return JWT.create()
                 .withIssuer(user.getUsername())
                 .withIssuedAt(now)
                 .withExpiresAt(validity)
                 .withClaim("firstName", user.getFirstName())
                 .withClaim("lastName", user.getLastName())
+                .withClaim("role", user.getRole())
                 .sign(Algorithm.HMAC256(secretKey));
 
     }
