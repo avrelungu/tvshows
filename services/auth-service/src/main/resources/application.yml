@@ -20,6 +20,10 @@ jwt:
 
 api-gateway:
   url: http://localhost:8080
+
+users-service:
+  api:
+    url: http://localhost:8082
   
   # Actuator
   actuator:

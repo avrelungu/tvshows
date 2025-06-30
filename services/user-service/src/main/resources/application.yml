@@ -32,3 +32,12 @@ server:
         http-only: true
         secure: true
         same-site: strict
+
+logging:
+  level:
+    root: INFO
+    org.springframework.web: DEBUG
+    com.example.user_service: DEBUG
+  pattern:
+    console: "%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+
