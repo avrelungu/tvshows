@@ -15,10 +15,6 @@ CREATE TABLE IF NOT EXISTS watchlist (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
         user_id UUID NOT NULL REFERENCES user_profiles(id),
         show_id INTEGER NOT NULL,
-        name VARCHAR(50) NOT NULL,
-        description TEXT NOT NULL,
-        image_medium VARCHAR(255),
-        image_original VARCHAR(255),
         added_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         UNIQUE(user_id, show_id)
 );

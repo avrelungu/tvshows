@@ -13,6 +13,14 @@ spring:
     database-platform: org.hibernate.dialect.PostgreSQLDialect
     hibernate:
       ddl-auto: none
+  data:
+    redis:
+      host: localhost
+      port: 6379
+
+  cache:
+    redis:
+      time-to-live: 3600000
 
 server:
   port: 8083
@@ -31,6 +39,7 @@ review-rating-service:
 tv-maze:
   api:
     url: https://api.tvmaze.com
+    size: 250
 
 logging:
   level:

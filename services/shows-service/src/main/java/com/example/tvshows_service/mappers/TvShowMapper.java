@@ -78,4 +78,18 @@ public interface TvShowMapper {
                 })
                 .collect(Collectors.toSet());
     }
+
+    @Mapping(target = "rating", source = "rating.average")
+    @Mapping(target = "imageMedium", source = "image.medium")
+    @Mapping(target = "imageOriginal", source = "image.original")
+    @Mapping(target = "premiered", expression = "java(dto.getPremiered() != null ? dto.getPremiered().toString() : null)")
+    @Mapping(target = "ended", expression = "java(dto.getEnded() != null ? dto.getEnded().toString() : null)")
+    @Mapping(target = "tvrage", source = "externals.tvrage")
+    @Mapping(target = "thetvdb", source = "externals.thetvdb")
+    @Mapping(target = "imdb", source = "externals.imdb")
+    @Mapping(target = "scheduleTime", source = "schedule.time")
+    @Mapping(target = "scheduleDays", source = "schedule.days")
+    @Mapping(target = "watchlistUrl", ignore = true)
+    @Mapping(target = "reviewUrl", ignore = true)
+    TvShowDto mazeDtoToTvShowDto(TvMazeShowDto dto);
 }
