@@ -1,6 +1,10 @@
 spring:
   application:
     name: shows-service
+
+  profiles:
+    active: dev
+
   sql:
     init:
       mode: always

@@ -1,0 +1,3 @@
+database:
+  dump:
+    path: "src/main/resources/database/tv-shows-dump.json"

@@ -3,27 +3,21 @@ package com.example.tvshows_service.controllers;
 import com.example.tvshows_service.dto.TvShowDto;
 import com.example.tvshows_service.exceptions.TvShowsNotFoundException;
 import com.example.tvshows_service.filters.TvShowFilter;
-import com.example.tvshows_service.service.TvMazeSyncService;
 import com.example.tvshows_service.service.TvShowService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.concurrent.CompletableFuture;
-
 @RestController
 @RequestMapping("/api/tv-shows")
 public class TvShowsController {
     private final TvShowService tvShowService;
-    private final TvMazeSyncService tvMazeSyncService;
 
     public TvShowsController(
-            TvShowService tvShowService,
-            TvMazeSyncService tvMazeSyncService
+            TvShowService tvShowService
     ) {
         this.tvShowService = tvShowService;
-        this.tvMazeSyncService = tvMazeSyncService;
     }
 
     @GetMapping
@@ -55,12 +49,5 @@ public class TvShowsController {
         tvShowService.addToWatchList(tvShowId, username);
 
         return ResponseEntity.noContent().build();
-    }
-
-    @GetMapping("/sync")
-    public ResponseEntity<String> syncTvShows() {
-        CompletableFuture.runAsync(tvMazeSyncService::syncTvShows);
-
-        return ResponseEntity.ok("Sync started to run");
     }
 }
