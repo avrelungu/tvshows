@@ -22,18 +22,6 @@ public class Watchlist {
     @Column(name = "show_id", unique = false, nullable = false)
     private Integer showId;
 
-    @Column(name = "name", nullable = false)
-    private String name;
-
-    @Column(name = "description", nullable = false)
-    private String description;
-
-    @Column(name = "image_medium")
-    private String imageMedium;
-
-    @Column(name = "image_original")
-    private String imageOriginal;
-
     @Column(name = "added_at")
     private LocalDateTime addedAt = LocalDateTime.now();
 }

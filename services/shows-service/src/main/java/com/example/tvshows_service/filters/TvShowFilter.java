@@ -22,7 +22,17 @@ public class TvShowFilter {
     private String status;
     private String network;
     private String language;
-    private String sortBy;
-    private String sortOrder;
+    private String sortBy = "id";
+    private String sortOrder = "asc";
     private List<String> genres;
+
+    @Override
+    public int hashCode() {
+        return java.util.Objects.hash(
+                name, description, network, status,
+                ended, premiered, language,
+                minRating, maxRating, genres,
+                sortBy, sortOrder
+        );
+    }
 }

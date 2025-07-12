@@ -1,9 +1,0 @@
-<div class="mt-4">
-    <app-buttons
-            (loginEvent)="showComponent('login')"
-            (logoutEvent)="showComponent('welcome')"
-    />
-
-    <app-login-form *ngIf="componentToShow == 'login'" (onSubmitLoginEvent)="onLogin($event)" (onSubmitRegisterEvent)="onRegister($event)"/>
-    <app-welcome-content *ngIf="componentToShow == 'welcome'"></app-welcome-content>
-</div>

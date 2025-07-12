@@ -13,6 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -36,6 +37,10 @@ public class WatchlistService {
 
     public List<WatchlistDto> getWatchlistForUserProfile(String username) throws UserProfileNotFoundException {
         List<Watchlist> watchlists = watchlistRepository.findByUserProfileUsername(username);
+
+        if (watchlists.isEmpty()) {
+            return new ArrayList<>();
+        }
 
         return watchlistMapper.toListWatchlistDto(watchlists);
     }

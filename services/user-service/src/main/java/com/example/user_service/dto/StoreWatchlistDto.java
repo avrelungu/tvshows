@@ -11,8 +11,4 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class StoreWatchlistDto {
     public Long tvShowId;
-    public String name;
-    public String description;
-    public String imageMedium;
-    public String imageOriginal;
 }

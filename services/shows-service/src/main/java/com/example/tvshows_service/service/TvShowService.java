@@ -3,7 +3,6 @@ package com.example.tvshows_service.service;
 import com.example.tvshows_service.dto.TvShowDto;
 import com.example.tvshows_service.dto.external.StoreTvShowSearchDto;
 import com.example.tvshows_service.dto.external.StoreWatchlistDto;
-import com.example.tvshows_service.dto.external.TvMazeShowDto;
 import com.example.tvshows_service.exceptions.TvShowsNotFoundException;
 import com.example.tvshows_service.filters.TvShowFilter;
 import com.example.tvshows_service.helpers.ReviewHelper;
@@ -11,31 +10,23 @@ import com.example.tvshows_service.helpers.WatchlistHelper;
 import com.example.tvshows_service.mappers.TvShowMapper;
 import com.example.tvshows_service.models.TvShow;
 import com.example.tvshows_service.repositories.TvShowRepository;
+import com.example.tvshows_service.specifications.TvShowSpecification;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.*;
-import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.http.HttpStatusCode;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
-import org.springframework.web.reactive.function.client.WebClientResponseException;
 
-import java.util.List;
-import java.util.Optional;
+import java.util.Objects;
+import java.util.stream.Stream;
 
 @Service
 @Slf4j
 public class TvShowService {
     @Value("${user-service.api.url}")
     private String userServiceUrl;
-
-    @Value("${tv-maze.api.size}")
-    private int EXTERNAL_API_PAGE_SIZE;
-
-    @Value("${tv-maze.api.url}")
-    private String tvMazeApiUrl;
 
     private final WebClient webClient;
 
@@ -47,7 +38,7 @@ public class TvShowService {
 
     private final ReviewHelper reviewHelper;
 
-    private final RedisTemplate<String, TvShowDto> redisTemplate;
+    private final TvShowCacheService tvShowCacheService;
 
     private final TvShowRepository tvShowRepository;
 
@@ -58,7 +49,7 @@ public class TvShowService {
             WatchlistHelper watchlistHelper,
             ObjectMapper objectMapper,
             ReviewHelper reviewHelper,
-            RedisTemplate<String, TvShowDto> tvShowsRedisTemplate
+            TvShowCacheService tvShowCacheService
     ) {
         this.tvShowRepository = tvShowRepository;
         this.webClient = webClient;
@@ -66,11 +57,16 @@ public class TvShowService {
         this.watchlistHelper = watchlistHelper;
         this.objectMapper = objectMapper;
         this.reviewHelper = reviewHelper;
-        this.redisTemplate = tvShowsRedisTemplate;
+        this.tvShowCacheService = tvShowCacheService;
     }
 
-    @Cacheable(value = "topRatedShows")
     public Page<TvShowDto> getTopRatedShows(int page, int size, String username) throws TvShowsNotFoundException {
+        Page<TvShowDto> cachedPage = tvShowCacheService.getCachedTopRatedShows(page, size);
+
+        if (cachedPage != null) {
+            return cachedPage;
+        }
+
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "rating"));
         Page<TvShowDto> tvShowsPage = tvShowRepository.findAll(pageable)
                 .map(tvShow -> {
@@ -85,43 +81,45 @@ public class TvShowService {
             throw new TvShowsNotFoundException();
         }
 
+        tvShowCacheService.cacheTopRatedShows(page, size, tvShowsPage);
+
         return tvShowsPage;
     }
 
     public Page<TvShowDto> getTvShows(int page, int size, TvShowFilter filter, String username, String url) throws TvShowsNotFoundException {
-        int fromIndex = page * size;
-        int toIndex = fromIndex + size;
+        Page<TvShowDto> cachedPage = tvShowCacheService.getCachedFilteredShows(page, size, filter);
 
-        String cacheKey = "tvshows:page";
-
-        List<TvShowDto> cachedShows = redisTemplate.opsForList().range(cacheKey, fromIndex, toIndex - 1);
-
-        if (cachedShows == null || cachedShows.size() < size) {
-            long cachedSize = redisTemplate.opsForList().size(cacheKey);
-
-            if (cachedSize < toIndex) {
-                int startExternalPage = Math.toIntExact(cachedSize / EXTERNAL_API_PAGE_SIZE);
-                int endExternalPAge = Math.toIntExact((toIndex - 1) / EXTERNAL_API_PAGE_SIZE);
-
-                for (int externalPage = startExternalPage; externalPage <= endExternalPAge; externalPage++) {
-                    List<TvShowDto> externalPageShows = fetchExternalPage(externalPage, username);
-
-                    if (!externalPageShows.isEmpty()) {
-                        redisTemplate.opsForList().rightPushAll(cacheKey, externalPageShows);
-                        ;
-                    }
-                }
-
-                cachedShows = redisTemplate.opsForList().range(cacheKey, fromIndex, toIndex - 1);
-            }
+        if (cachedPage != null) {
+            return cachedPage;
         }
 
-        if (cachedShows == null || cachedShows.isEmpty()) {
+        Specification<TvShow> spec = Stream.of(
+                        TvShowSpecification.hasName(filter.getName()),
+                        TvShowSpecification.hasDescription(filter.getDescription()),
+                        TvShowSpecification.hasNetwork(filter.getNetwork()),
+                        TvShowSpecification.hasStatus(filter.getStatus()),
+                        TvShowSpecification.endedBefore(filter.getEnded()),
+                        TvShowSpecification.premieredAfter(filter.getPremiered()),
+                        TvShowSpecification.hasLanguage(filter.getLanguage()),
+                        TvShowSpecification.ratingBetween(filter.getMinRating(), filter.getMaxRating()),
+                        TvShowSpecification.hasGenres(filter.getGenres())
+                )
+                .filter(Objects::nonNull)
+                .reduce(Specification::and)
+                .orElse(null);
+
+        Pageable pageable = createPageable(page, size, filter.getSortBy(), filter.getSortOrder());
+
+        Page<TvShowDto> tvShowPage = tvShowRepository.findAll(spec, pageable)
+                .map(tvShowMapper::tvShowToDto)
+                .map(tvShowDto -> addWatchListUrl(tvShowDto, username))
+                .map(tvShowDto -> addReviewUrl(tvShowDto, username));
+
+        if (tvShowPage.isEmpty()) {
             throw new TvShowsNotFoundException();
         }
 
-        Pageable pageable = createPageable(page, size, filter.getSortBy(), filter.getSortOrder());
-        long totalElements = Optional.ofNullable(redisTemplate.opsForList().size(cacheKey)).orElse(0L);
+        tvShowCacheService.cacheFilteredTvShows(page, size, filter, tvShowPage);
 
         StoreTvShowSearchDto storeTvShowSearchDto = new StoreTvShowSearchDto();
         storeTvShowSearchDto.setEndpoint(url);
@@ -134,57 +132,7 @@ public class TvShowService {
                 .toBodilessEntity()
                 .block();
 
-        return new PageImpl<>(cachedShows, pageable, totalElements);
-
-//        Specification<TvShow> spec = Stream.of(
-//                        TvShowSpecification.hasName(filter.getName()),
-//                        TvShowSpecification.hasDescription(filter.getDescription()),
-//                        TvShowSpecification.hasNetwork(filter.getNetwork()),
-//                        TvShowSpecification.hasStatus(filter.getStatus()),
-//                        TvShowSpecification.endedBefore(filter.getEnded()),
-//                        TvShowSpecification.premieredAfter(filter.getPremiered()),
-//                        TvShowSpecification.hasLanguage(filter.getLanguage()),
-//                        TvShowSpecification.ratingBetween(filter.getMinRating(), filter.getMaxRating()),
-//                        TvShowSpecification.hasGenres(filter.getGenres())
-//                )
-//                .filter(Objects::nonNull)
-//                .reduce(Specification::and)
-//                .orElse(null);
-//
-//        Page<TvShowDto> tvShowPage = tvShowRepository.findAll(spec, pageable)
-//                .map(tvShow -> addWatchListUrl(tvShow, username))
-//                .map(tvShowDto -> addReviewUrl(tvShowDto, username));
-//
-//        if (tvShowPage.isEmpty()) {
-//            throw new TvShowsNotFoundException();
-//        }
-    }
-
-    private List<TvShowDto> fetchExternalPage(int externalPage, String username) {
-        String tvMazeApiUrl = this.tvMazeApiUrl + "/shows?page=" + externalPage;
-
-        try {
-
-            return webClient.get()
-                    .uri(tvMazeApiUrl)
-                    .retrieve()
-                    .onStatus(HttpStatusCode::isError, clientResponse -> {
-                        log.error("Error while fetching external page: {}", clientResponse.statusCode());
-                        return clientResponse.createException();
-                    })
-                    .bodyToFlux(TvMazeShowDto.class)
-                    .map(tvShowMapper::mazeDtoToTvShowDto)
-                    .map(tvShowDto -> addReviewUrl(addWatchListUrl(tvShowDto, username), username))
-                    .collectList()
-                    .block();
-
-        } catch (WebClientResponseException e) {
-            log.error("WebClientResponseException fetching page {}: {}", externalPage, e.getMessage());
-            return List.of();
-        } catch (Exception e) {
-            log.error("Exception fetching external page {}: {}", externalPage, e.getMessage());
-            return List.of();
-        }
+        return tvShowPage;
     }
 
     public void addToWatchList(long tvShowId, String username) throws TvShowsNotFoundException {

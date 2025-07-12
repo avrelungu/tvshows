@@ -1,12 +1,9 @@
-<div class="app">
-  <app-header [pageTitle]="'TvShows Authentication JWT'"
-              [logoSrc]="'/images/logo.png'"
-  >
+<div class="app-container">
+    <app-header *ngIf="isAuthenticated"></app-header>
 
-  </app-header>
+    <main class="main-content" [class.with-header]="isAuthenticated">
+        <router-outlet></router-outlet>
+    </main>
 
-    <app-content>
-
-
-    </app-content>
+    <app-footer *ngIf="isAuthenticated"></app-footer>
 </div>
