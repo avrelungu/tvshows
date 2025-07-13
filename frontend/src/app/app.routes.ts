@@ -4,6 +4,7 @@ import { RegisterComponent } from './components/register/register.component';
 import { DashboardComponent } from './components/dashboard/dashboard.component';
 import { ReviewsComponent } from './components/reviews/review.component';
 import { UpgradeComponent } from './components/upgrade/upgrade.component';
+import { ShowDetailsComponent } from './components/show-details/show-details.component';
 import { AuthGuard } from './guards/auth.guard';
 
 export const routes: Routes = [
@@ -11,6 +12,7 @@ export const routes: Routes = [
     { path: 'login', component: LoginComponent },
     { path: 'register', component: RegisterComponent },
     { path: 'dashboard', component: DashboardComponent, canActivate: [AuthGuard] },
+    { path: 'show/:id', component: ShowDetailsComponent, canActivate: [AuthGuard] },
     { path: 'reviews', component: ReviewsComponent, canActivate: [AuthGuard] },
     { path: 'upgrade', component: UpgradeComponent, canActivate: [AuthGuard] },
     { path: '**', redirectTo: '/dashboard' }

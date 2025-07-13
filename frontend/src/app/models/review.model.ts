@@ -4,6 +4,8 @@ export interface Review {
     tvShowId: number;
     content: string;
     rating: number;
+    isApproved: boolean;
+    isFlagged: boolean;
     createdAt: string;
     updatedAt: string;
 }
@@ -16,4 +18,18 @@ export interface StoreReviewRequest {
 export interface UpdateReviewRequest {
     content: string;
     rating: number;
+}
+
+export interface ReviewStats {
+    tvShowId: number;
+    averageRating: number;
+    totalReviews: number;
+}
+
+export interface PagedReviews {
+    content: Review[];
+    totalElements: number;
+    totalPages: number;
+    size: number;
+    number: number;
 }

@@ -2,29 +2,25 @@ import { Component } from '@angular/core';
 import { RouterOutlet, Router, NavigationEnd, RouterLink, RouterLinkActive } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { AuthService } from './services/auth.service';
+import { UserDropdownComponent } from './components/user-dropdown/user-dropdown.component';
 import { filter } from 'rxjs';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, CommonModule, RouterLink, RouterLinkActive],
+  imports: [RouterOutlet, CommonModule, RouterLink, RouterLinkActive, UserDropdownComponent],
   template: `
     <div class="app">
       <nav class="main-nav" *ngIf="showNavigation">
         <div class="nav-brand">
           <h1>TV Shows App</h1>
         </div>
-        <div class="nav-links" *ngIf="isAuthenticated">
-          <a routerLink="/dashboard" routerLinkActive="active">Dashboard</a>
-          <a routerLink="/reviews" routerLinkActive="active">Reviews</a>
-          <a
-              routerLink="/upgrade"
-              routerLinkActive="active"
-              class="upgrade-link"
-              *ngIf="currentUser?.role === 'FREE'">
-            Upgrade to Premium
-          </a>
-          <button (click)="logout()" class="logout-btn">Logout</button>
+        <div class="nav-user" *ngIf="isAuthenticated">
+          <app-user-dropdown 
+            [username]="currentUser?.username || ''"
+            [userRole]="currentUser?.role || ''"
+            (logout)="logout()">
+          </app-user-dropdown>
         </div>
       </nav>
 
@@ -55,37 +51,9 @@ import { filter } from 'rxjs';
       font-size: 1.5rem;
     }
 
-    .nav-links {
+    .nav-user {
       display: flex;
-      gap: 1rem;
       align-items: center;
-    }
-
-    .nav-links a {
-      color: white;
-      text-decoration: none;
-      padding: 0.5rem 1rem;
-      border-radius: 4px;
-      transition: background-color 0.3s ease;
-    }
-
-    .nav-links a:hover,
-    .nav-links a.active {
-      background-color: rgba(255, 255, 255, 0.1);
-    }
-
-    .logout-btn {
-      background: #e74c3c;
-      color: white;
-      border: none;
-      padding: 0.5rem 1rem;
-      border-radius: 4px;
-      cursor: pointer;
-      transition: background-color 0.3s ease;
-    }
-
-    .logout-btn:hover {
-      background: #c0392b;
     }
 
     .main-content {
@@ -96,18 +64,6 @@ import { filter } from 'rxjs';
       min-height: 100vh;
     }
 
-    .nav-links a.upgrade-link {
-      background: #f39c12;
-      border-radius: 20px;
-      padding: 0.5rem 1rem;
-      font-weight: bold;
-      transition: all 0.3s ease;
-    }
-
-    .nav-links a.upgrade-link:hover {
-      background: #e67e22;
-      transform: translateY(-1px);
-    }
   `]
 })
 export class AppComponent {

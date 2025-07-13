@@ -178,4 +178,10 @@ public class TvShowService {
 
         return PageRequest.of(page, size, sort);
     }
+
+    public TvShowDto getTvShow(Long tvShowId) throws TvShowsNotFoundException {
+        TvShow tvShow = tvShowRepository.findByTvShowId(tvShowId).orElseThrow(TvShowsNotFoundException::new);
+
+        return tvShowMapper.tvShowToDto(tvShow);
+    }
 }

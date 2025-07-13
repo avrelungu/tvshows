@@ -23,5 +23,11 @@ public class ReviewDto {
 
     private Integer rating;
 
+    private Boolean isApproved;
+
+    private Boolean isFlagged;
+
+    private LocalDateTime createdAt;
+
     private LocalDateTime updatedAt;
 }

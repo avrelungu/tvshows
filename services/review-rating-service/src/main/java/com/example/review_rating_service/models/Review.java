@@ -8,7 +8,9 @@ import java.util.UUID;
 
 @Data
 @Entity
-@Table(name = "reviews")
+@Table(name = "reviews", uniqueConstraints = {
+    @UniqueConstraint(columnNames = {"username", "tv_show_id"})
+})
 public class Review {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -25,6 +27,12 @@ public class Review {
 
     @Column(name = "rating", nullable = false)
     private Integer rating;
+
+    @Column(name = "is_approved", nullable = false)
+    private Boolean isApproved = true;
+
+    @Column(name = "is_flagged", nullable = false)
+    private Boolean isFlagged = false;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;

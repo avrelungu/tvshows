@@ -17,7 +17,6 @@ import {Router} from "@angular/router";
                 <div class="user-info" *ngIf="currentUser">
                     <span>Welcome, {{ currentUser.username }}!</span>
                     <span class="member-type">{{ currentUser.role }}</span>
-                    <button (click)="logout()">Logout</button>
                 </div>
             </header>
 
@@ -35,13 +34,13 @@ import {Router} from "@angular/router";
                 <section *ngIf="activeSection === 'top-rated'">
                     <h2>Top Rated Shows</h2>
                     <div class="shows-grid" *ngIf="topRatedShows && topRatedShows.content">
-                        <div class="show-card" *ngFor="let show of topRatedShows.content">
+                        <div class="show-card" *ngFor="let show of topRatedShows.content" (click)="goToShowDetails(show.id)">
                             <img [src]="show.imageMedium" [alt]="show.name"/>
                             <div class="show-info">
                                 <h3>{{ show.name }}</h3>
                                 <p class="rating">⭐ {{ show.rating }}/10</p>
                                 <p class="genres">{{ show.genres.join(', ') || 'No genres' }}</p>
-                                <button (click)="addToWatchlist(show)" [disabled]="addingToWatchlist">
+                                <button (click)="addToWatchlist(show)" [disabled]="addingToWatchlist" (click)="$event.stopPropagation()">
                                     Add to Watchlist
                                 </button>
                             </div>
@@ -78,14 +77,14 @@ import {Router} from "@angular/router";
                     </div>
 
                     <div class="shows-grid" *ngIf="allShows && allShows.content">
-                        <div class="show-card" *ngFor="let show of allShows.content">
+                        <div class="show-card" *ngFor="let show of allShows.content" (click)="goToShowDetails(show.id)">
                             <img [src]="show.imageMedium" [alt]="show.name"/>
                             <div class="show-info">
                                 <h3>{{ show.name }}</h3>
                                 <p class="rating">⭐ {{ show.rating }}/10</p>
                                 <p class="status">{{ show.status }}</p>
                                 <p class="genres">{{ show.genres.join(', ') || 'No genres' }}</p>
-                                <button (click)="addToWatchlist(show)" [disabled]="addingToWatchlist">
+                                <button (click)="addToWatchlist(show)" [disabled]="addingToWatchlist" (click)="$event.stopPropagation()">
                                     Add to Watchlist
                                 </button>
                             </div>
@@ -240,6 +239,7 @@ import {Router} from "@angular/router";
 
         .show-card:hover {
             transform: translateY(-4px);
+            cursor: pointer;
         }
 
         .show-card img {
@@ -536,6 +536,10 @@ export class DashboardComponent implements OnInit {
     changePage(page: number): void {
         this.currentPage = page;
         this.loadAllShows();
+    }
+
+    goToShowDetails(showId: number): void {
+        this.router.navigate(['/show', showId]);
     }
 
     logout(): void {

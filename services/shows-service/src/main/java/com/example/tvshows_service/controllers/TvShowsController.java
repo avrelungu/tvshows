@@ -44,6 +44,13 @@ public class TvShowsController {
         return ResponseEntity.ok(showList);
     }
 
+    @GetMapping("/{tvShowId}")
+    public ResponseEntity<TvShowDto> getTvShow(@PathVariable Long tvShowId) throws TvShowsNotFoundException {
+        TvShowDto tvShowDto = tvShowService.getTvShow(tvShowId);
+
+        return ResponseEntity.ok(tvShowDto);
+    }
+
     @PostMapping("/{tvShowId}/watchlist/{username}")
     public ResponseEntity<Void> watchlist(@PathVariable("tvShowId") long tvShowId, @PathVariable("username") String username) throws TvShowsNotFoundException {
         tvShowService.addToWatchList(tvShowId, username);

@@ -52,6 +52,10 @@ export class TvShowService {
         return response;
     }
 
+    getTvShowById(id: number): Observable<TvShow> {
+        return this.http.get<TvShow>(`${this.apiUrl}/${id}`);
+    }
+
     addToWatchlist(tvShowId: number, username: string): Observable<void> {
         return this.http.post<void>(`${this.apiUrl}/${tvShowId}/watchlist/${username}`, {});
     }
