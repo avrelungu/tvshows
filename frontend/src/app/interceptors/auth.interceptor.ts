@@ -11,7 +11,7 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
             setHeaders: {
                 Authorization: `Bearer ${currentUser.token}`,
                 'X-Auth-Username': currentUser.username,
-                'X-Auth-Role': currentUser.role
+                'X-Auth-Role': currentUser.role || "FREE"
             }
         });
         return next(authReq);

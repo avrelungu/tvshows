@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import {catchError, map, Observable, tap, throwError} from 'rxjs';
 import { TvShow, TvShowFilter, PageResponse } from '../models/tvshow.model';
 import { environment } from '../../environments/environment';
 
@@ -38,7 +38,18 @@ export class TvShowService {
             .set('page', page.toString())
             .set('size', size.toString());
 
-        return this.http.get<PageResponse<TvShow>>(`${this.apiUrl}/top-rated`, { params });
+        let response = new Observable<PageResponse<TvShow>>;
+
+        try {
+            console.log("inainte de formarea request-ului");
+            response = this.http.get<PageResponse<TvShow>>(`${this.apiUrl}/top-rated`, { params });
+        } catch (e) {
+            console.error(`o eroare:${e}`);
+        }
+
+        console.log('prima oara pana aici?');
+
+        return response;
     }
 
     addToWatchlist(tvShowId: number, username: string): Observable<void> {

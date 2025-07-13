@@ -1,5 +1,6 @@
 package com.example.tvshows_auth.dto;
 
+import com.example.tvshows_auth.enums.Role;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -15,4 +16,5 @@ public class LoginUserDto {
     private String lastName;
     private String token;
     private String email;
+    private Role role;
 }

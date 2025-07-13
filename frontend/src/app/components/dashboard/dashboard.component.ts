@@ -454,6 +454,7 @@ export class DashboardComponent implements OnInit {
     loadTopRatedShows(): void {
         this.tvShowService.getTopRatedShows(0, 12).subscribe({
             next: (shows) => {
+                console.log('vine pana aici aici?');
                 this.topRatedShows = shows;
             },
             error: (error) => {

@@ -46,6 +46,7 @@ public class AuthService {
         if (passwordEncoder.matches(credentialDto.password(), user.getPassword())) {
             LoginUserDto loginUserDto = userMapper.toLoginUserDto(user);
             loginUserDto.setToken(token);
+            loginUserDto.setRole(user.getRole());
 
             return loginUserDto;
         }

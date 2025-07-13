@@ -14,16 +14,16 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 public class TvShowCacheService {
     @Value("${redis.cache-keys.top-rated-shows.cache-key}")
-    private static String TOP_RATED_CACHE_KEY;
+    private String TOP_RATED_CACHE_KEY;
 
     @Value("${redis.cache-keys.top-rated-shows.ttl}")
-    private static long CACHE_TTL;
+    private long CACHE_TTL;
 
     @Value("${redis.cache-keys.filtered-shows.cache-key}")
-    private static String FILTERED_SHOWS_CACHE_KEY;
+    private String FILTERED_SHOWS_CACHE_KEY;
 
     @Value("${redis.cache-keys.filtered-shows.ttl}")
-    private static long FILTERED_SHOWS_CACHE_TTL;
+    private long FILTERED_SHOWS_CACHE_TTL;
 
     private final RedisTemplate<String, Object> redisTemplate;
 
@@ -33,15 +33,23 @@ public class TvShowCacheService {
 
     @SuppressWarnings("unchecked")
     public Page<TvShowDto> getCachedTopRatedShows(int page, int size) {
-        String cacheKey = buildCacheKey(page, size);
 
-        try {
-            return (Page<TvShowDto>) redisTemplate.opsForValue().get(cacheKey);
-        } catch (Exception e) {
-            log.error("Error retrieving Top Rated TvShows from cache: {}", e.getMessage());
-
-            return null;
-        }
+        return null;
+//        String cacheKey = buildCacheKey(page, size);
+//
+//        try {
+//            Object cached = redisTemplate.opsForValue().get(cacheKey);
+//
+//            if (cached != null) {
+//                return null;
+//            }
+//
+//            return (Page<TvShowDto>) cached;
+//        } catch (Exception e) {
+//            log.error("Error retrieving Top Rated TvShows from cache: {}", e.getMessage());
+//
+//            return null;
+//        }
     }
 
     @SuppressWarnings("unchecked")

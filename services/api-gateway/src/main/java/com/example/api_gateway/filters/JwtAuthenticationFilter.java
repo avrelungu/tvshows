@@ -35,6 +35,7 @@ public class JwtAuthenticationFilter implements GlobalFilter, Ordered {
 
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
+        log.info("ajunge pe aici");
         ServerHttpRequest request = exchange.getRequest();
 
         if (isExcludedPath(request.getPath().toString())) {
@@ -50,19 +51,30 @@ public class JwtAuthenticationFilter implements GlobalFilter, Ordered {
         String token = authHeader.substring(7);
 
         try {
+            log.info("ajunge pe aici x2");
             Claims claims = jwtService.verifyToken(token);
 
+            String username = claims.getIssuer();
+            String firstName = claims.get("firstName", String.class);
+            String lastName = claims.get("lastName", String.class);
+            String role = claims.get("role", String.class);
+
+            log.debug("JWT Claims: username={}, firstName={}, lastName={}, role={}",
+                    username, firstName, lastName, role);
+
             ServerHttpRequest modifiedRequest = exchange.getRequest().mutate()
-                    .header("X-Auth-Username", claims.getIssuer())
-                    .header("X-Auth-FirstName", claims.get("firstName", String.class))
-                    .header("X-Auth-LastName", claims.get("lastName", String.class))
-                    .header("X-Auth-Role", claims.get("role", String.class))
+                    .header("X-Auth-Username", username != null ? username : "")
+                    .header("X-Auth-FirstName", firstName != null ? firstName : "")
+                    .header("X-Auth-LastName", lastName != null ? lastName : "")
+                    .header("X-Auth-Role", role != null ? role : "")
                     .build();
 
             return chain.filter(exchange.mutate().request(modifiedRequest).build());
         } catch (JwtException e) {
+            log.error(e.getMessage());
             return onError(exchange, "Invalid JWT token: " + e.getMessage(), HttpStatus.UNAUTHORIZED);
         } catch (Exception e) {
+            log.error(e.getMessage());
             return onError(exchange, "Error while validating the JWT Token: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }

@@ -42,6 +42,8 @@ public class WatchlistService {
             return new ArrayList<>();
         }
 
+
+
         return watchlistMapper.toListWatchlistDto(watchlists);
     }
 
