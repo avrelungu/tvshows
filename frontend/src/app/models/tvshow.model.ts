@@ -35,6 +35,7 @@ export interface TvShowFilter {
     sortBy?: string;
     sortOrder?: string;
     genres?: string[];
+    ids?: number[];
 }
 
 export interface PageResponse<T> {

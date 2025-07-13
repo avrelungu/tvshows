@@ -39,4 +39,12 @@ public class WatchlistController {
 
         return ResponseEntity.ok().build();
     }
+
+    @DeleteMapping("/{username}/{tvShowId}")
+    public void removeFromWatchList(
+            @PathVariable String username,
+            @PathVariable String tvShowId
+    ) throws AppException {
+        watchlistService.removeFromWatchList(username, tvShowId);
+    }
 }

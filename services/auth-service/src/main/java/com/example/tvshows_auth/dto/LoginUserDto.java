@@ -15,6 +15,7 @@ public class LoginUserDto {
     private String firstName;
     private String lastName;
     private String token;
+    private String refreshToken;
     private String email;
     private Role role;
 }

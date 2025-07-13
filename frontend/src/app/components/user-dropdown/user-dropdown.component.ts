@@ -12,7 +12,7 @@ import { RouterLink } from '@angular/router';
         <span class="initials">{{ userInitials }}</span>
         <span class="role-badge" [class]="userRole?.toLowerCase()">{{ userRole }}</span>
       </button>
-      
+
       <div class="dropdown-menu" *ngIf="isOpen">
         <div class="user-info">
           <span class="username">{{ username }}</span>
@@ -23,15 +23,19 @@ import { RouterLink } from '@angular/router';
           <span class="menu-icon">📊</span>
           Dashboard
         </a>
+        <a routerLink="/dashboard" fragment="watchlist" (click)="closeDropdown()" class="menu-item">
+          <span class="menu-icon">📺</span>
+          Watchlist
+        </a>
         <a routerLink="/reviews" (click)="closeDropdown()" class="menu-item">
           <span class="menu-icon">⭐</span>
           Reviews
         </a>
-        <a 
-          routerLink="/upgrade" 
-          (click)="closeDropdown()" 
-          class="menu-item upgrade-item"
-          *ngIf="userRole === 'FREE'">
+        <a
+            routerLink="/upgrade"
+            (click)="closeDropdown()"
+            class="menu-item upgrade-item"
+            *ngIf="userRole === 'FREE'">
           <span class="menu-icon">⬆️</span>
           Upgrade to Premium
         </a>

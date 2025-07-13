@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { TvShowService } from '../../services/tvshow.service';
 import { WatchlistService } from '../../services/watchlist.service';
 import { AuthService } from '../../services/auth.service';
@@ -7,6 +7,7 @@ import { WatchlistItem } from '../../models/watchlist.model';
 import {NgForOf, NgIf} from "@angular/common";
 import {FormsModule} from "@angular/forms";
 import {Router} from "@angular/router";
+import { Subject, debounceTime, distinctUntilChanged, takeUntil } from 'rxjs';
 
 @Component({
     selector: 'app-dashboard',
@@ -17,6 +18,10 @@ import {Router} from "@angular/router";
                 <div class="user-info" *ngIf="currentUser">
                     <span>Welcome, {{ currentUser.username }}!</span>
                     <span class="member-type">{{ currentUser.role }}</span>
+                    <button *ngIf="currentUser.role === 'ADMIN'" (click)="goToAdmin()" class="admin-btn">
+                        Admin Panel
+                    </button>
+                    <button (click)="logout()" class="logout-btn">Logout</button>
                 </div>
             </header>
 
@@ -54,11 +59,14 @@ import {Router} from "@angular/router";
 
                     <!-- Search Filters -->
                     <div class="filters">
-                        <input
-                                type="text"
-                                placeholder="Search shows..."
-                                [(ngModel)]="searchFilter.name"
-                                (input)="onFilterChange()">
+                        <div class="search-input-container">
+                            <input
+                                    type="text"
+                                    placeholder="Search shows..."
+                                    [(ngModel)]="searchFilter.name"
+                                    (input)="onNameFilterChange()">
+                            <span *ngIf="isSearching" class="search-loading">🔍</span>
+                        </div>
 
                         <select [(ngModel)]="searchFilter.status" (change)="onFilterChange()">
                             <option value="">All Status</option>
@@ -92,18 +100,17 @@ import {Router} from "@angular/router";
                     </div>
 
                     <!-- Pagination -->
-                    <div class="pagination" *ngIf="allShows && allShows.totalPages">
-                        <button
-                                [disabled]="currentPage === 0"
-                                (click)="changePage(currentPage - 1)">
-                            Previous
+                    <div class="load-more-section" *ngIf="allShows">
+                        <button 
+                                *ngIf="hasMorePages"
+                                [disabled]="loadingMore"
+                                (click)="loadMoreShows()"
+                                class="load-more-btn">
+                            {{ loadingMore ? 'Loading...' : 'Load More Shows' }}
                         </button>
-                        <span>Page {{ currentPage + 1 }} of {{ allShows.totalPages }}</span>
-                        <button
-                                [disabled]="currentPage >= allShows.totalPages - 1"
-                                (click)="changePage(currentPage + 1)">
-                            Next
-                        </button>
+                        <p *ngIf="!hasMorePages && allShows.content.length > 0" class="end-message">
+                            You've seen all {{ allShows.totalElements }} shows!
+                        </p>
                     </div>
                 </section>
 
@@ -112,7 +119,7 @@ import {Router} from "@angular/router";
                     <div class="section-header">
                         <h2>My Watchlist</h2>
                         <div class="watchlist-info" *ngIf="currentUser?.role === 'FREE'">
-                            <span class="watchlist-limit">{{ watchlist.length || 0 }}/10 shows</span>
+                            <span class="watchlist-limit">{{ watchlist?.content?.length || 0 }}/10 shows</span>
                             <button class="upgrade-btn" (click)="goToUpgrade()">
                                 Upgrade for Unlimited
                             </button>
@@ -120,26 +127,31 @@ import {Router} from "@angular/router";
                     </div>
 
                     <!-- Upgrade Notice for FREE users approaching limit -->
-                    <div class="upgrade-notice" *ngIf="currentUser?.role === 'FREE' && (watchlist.length || 0) >= 8">
+                    <div class="upgrade-notice" *ngIf="currentUser?.role === 'FREE' && (watchlist?.content?.length || 0) >= 8">
                         <div class="notice-content">
                             <h3>Almost at your limit!</h3>
-                            <p>You have {{ 10 - (watchlist.length || 0) }} watchlist slots remaining.</p>
+                            <p>You have {{ 10 - (watchlist?.content?.length || 0) }} watchlist slots remaining.</p>
                             <button (click)="goToUpgrade()" class="upgrade-cta">
                                 Upgrade to Premium for unlimited watchlist
                             </button>
                         </div>
                     </div>
 
-                    <div class="watchlist-grid" *ngIf="watchlist && watchlist.length > 0">
-                        <div class="watchlist-item" *ngFor="let item of watchlist">
-                            <img [src]="item.imageMedium" [alt]="item.name" />
-                            <div class="item-info">
-                                <h3>{{ item.name }}</h3>
-                                <p>{{ item.description }}</p>
+                    <div class="shows-grid" *ngIf="watchlist && watchlist.content && watchlist.content.length > 0">
+                        <div class="show-card" *ngFor="let show of watchlist.content" (click)="goToShowDetails(show.id)">
+                            <img [src]="show.imageMedium" [alt]="show.name"/>
+                            <div class="show-info">
+                                <h3>{{ show.name }}</h3>
+                                <p class="rating">⭐ {{ show.rating }}/10</p>
+                                <p class="status">{{ show.status }}</p>
+                                <p class="genres">{{ show.genres.join(', ') || 'No genres' }}</p>
+                                <button (click)="removeFromWatchlist(show)" (click)="$event.stopPropagation()">
+                                    Remove from Watchlist
+                                </button>
                             </div>
                         </div>
                     </div>
-                    <div *ngIf="watchlist && watchlist.length === 0" class="empty-state">
+                    <div *ngIf="watchlist && watchlist.content && watchlist.content.length === 0" class="empty-state">
                         <p>Your watchlist is empty. Add some shows to get started!</p>
                     </div>
                 </section>
@@ -180,6 +192,38 @@ import {Router} from "@angular/router";
             font-size: 0.875rem;
         }
 
+        .admin-btn {
+            background: #f59e0b;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.875rem;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .admin-btn:hover {
+            background: #d97706;
+        }
+
+        .logout-btn {
+            background: #dc2626;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.875rem;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .logout-btn:hover {
+            background: #b91c1c;
+        }
+
         .dashboard-nav {
             background: white;
             padding: 0 2rem;
@@ -214,6 +258,23 @@ import {Router} from "@angular/router";
             display: flex;
             gap: 1rem;
             flex-wrap: wrap;
+        }
+
+        .search-input-container {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .search-loading {
+            position: absolute;
+            right: 10px;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
         }
 
         .filters input, .filters select {
@@ -285,51 +346,43 @@ import {Router} from "@angular/router";
             cursor: not-allowed;
         }
 
-        .watchlist-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
-            gap: 1rem;
-        }
 
-        .watchlist-item {
-            background: white;
-            border-radius: 8px;
-            padding: 1rem;
+        .load-more-section {
             display: flex;
-            gap: 1rem;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        }
-
-        .watchlist-item img {
-            width: 80px;
-            height: 120px;
-            object-fit: cover;
-            border-radius: 4px;
-        }
-
-        .item-info h3 {
-            margin: 0 0 0.5rem 0;
-        }
-
-        .pagination {
-            display: flex;
-            justify-content: center;
+            flex-direction: column;
             align-items: center;
-            gap: 1rem;
             margin-top: 2rem;
+            gap: 1rem;
         }
 
-        .pagination button {
-            padding: 0.5rem 1rem;
-            border: 1px solid #ddd;
-            background: white;
+        .load-more-btn {
+            padding: 0.75rem 2rem;
+            border: 2px solid #007bff;
+            background: #007bff;
+            color: white;
             cursor: pointer;
-            border-radius: 4px;
+            border-radius: 25px;
+            font-size: 1rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
         }
 
-        .pagination button:disabled {
+        .load-more-btn:hover:not(:disabled) {
+            background: #0056b3;
+            border-color: #0056b3;
+            transform: translateY(-2px);
+        }
+
+        .load-more-btn:disabled {
             opacity: 0.6;
             cursor: not-allowed;
+            transform: none;
+        }
+
+        .end-message {
+            color: #666;
+            font-style: italic;
+            margin: 0;
         }
 
         .empty-state {
@@ -410,7 +463,7 @@ import {Router} from "@angular/router";
         }
     `]
 })
-export class DashboardComponent implements OnInit {
+export class DashboardComponent implements OnInit, OnDestroy {
     currentUser: any;
     activeSection = 'top-rated';
     sections = [
@@ -421,16 +474,22 @@ export class DashboardComponent implements OnInit {
 
     topRatedShows: PageResponse<TvShow> | null = null;
     allShows: PageResponse<TvShow> | null = null;
-    watchlist: WatchlistItem[] = [];
+    watchlist: PageResponse<TvShow> | null = null;
 
     currentPage = 0;
     pageSize = 12;
     addingToWatchlist = false;
+    loadingMore = false;
+    hasMorePages = true;
+    isSearching = false;
+    
+    private searchSubject = new Subject<string>();
+    private destroy$ = new Subject<void>();
 
     searchFilter = {
-        name: '',
-        status: '',
-        language: ''
+        name: undefined,
+        status: undefined,
+        language: undefined
     };
 
     constructor(
@@ -445,6 +504,24 @@ export class DashboardComponent implements OnInit {
         this.loadTopRatedShows();
         this.loadAllShows();
         this.loadWatchlist();
+        this.setupSearchDebounce();
+    }
+
+    ngOnDestroy(): void {
+        this.destroy$.next();
+        this.destroy$.complete();
+    }
+
+    private setupSearchDebounce(): void {
+        this.searchSubject.pipe(
+            debounceTime(500), // Wait 500ms after user stops typing
+            distinctUntilChanged(), // Only emit if value is different from previous
+            takeUntil(this.destroy$) // Cleanup subscription on destroy
+        ).subscribe(() => {
+            this.isSearching = true;
+            this.currentPage = 0;
+            this.loadAllShows();
+        });
     }
 
     setActiveSection(section: string): void {
@@ -464,19 +541,49 @@ export class DashboardComponent implements OnInit {
     }
 
     loadAllShows(): void {
+        this.currentPage = 0;
+        this.hasMorePages = true;
         this.tvShowService.getTvShows(this.currentPage, this.pageSize, this.searchFilter).subscribe({
             next: (shows) => {
                 this.allShows = shows;
+                this.hasMorePages = shows.number < shows.totalPages - 1;
+                this.isSearching = false;
             },
             error: (error) => {
                 console.error('Error loading shows:', error);
+                this.isSearching = false;
+            }
+        });
+    }
+
+    loadMoreShows(): void {
+        if (!this.hasMorePages || this.loadingMore || !this.allShows) {
+            return;
+        }
+
+        this.loadingMore = true;
+        this.currentPage++;
+
+        this.tvShowService.getTvShows(this.currentPage, this.pageSize, this.searchFilter).subscribe({
+            next: (shows) => {
+                if (this.allShows) {
+                    this.allShows.content = [...this.allShows.content, ...shows.content];
+                    this.allShows.number = shows.number;
+                    this.hasMorePages = shows.number < shows.totalPages - 1;
+                }
+                this.loadingMore = false;
+            },
+            error: (error) => {
+                console.error('Error loading more shows:', error);
+                this.currentPage--; // Revert page increment on error
+                this.loadingMore = false;
             }
         });
     }
 
     loadWatchlist(): void {
         if (this.currentUser?.username) {
-            this.watchlistService.getWatchlist(this.currentUser.username).subscribe({
+            this.watchlistService.getWatchlistShows(this.currentUser.username).subscribe({
                 next: (watchlist) => {
                     this.watchlist = watchlist;
                 },
@@ -490,8 +597,7 @@ export class DashboardComponent implements OnInit {
     addToWatchlist(show: TvShow): void {
         if (!this.currentUser?.username) return;
 
-        // Check FREE user limit
-        if (this.currentUser.role === 'FREE' && (this.watchlist?.length || 0) >= 10) {
+        if (this.currentUser.role === 'FREE' && (this.watchlist?.content?.length || 0) >= 10) {
             if (confirm('You\'ve reached your watchlist limit of 10 shows. Upgrade to Premium for unlimited watchlist. Go to upgrade page?')) {
                 this.goToUpgrade();
             }
@@ -513,30 +619,48 @@ export class DashboardComponent implements OnInit {
         });
     }
 
+    removeFromWatchlist(show: TvShow): void {
+        if (!this.currentUser?.username) return;
+
+        if (confirm(`Remove "${show.name}" from your watchlist?`)) {
+            this.watchlistService.removeFromWatchlist(this.currentUser.username, show.id).subscribe({
+                next: () => {
+                    alert('Removed from watchlist!');
+                    this.loadWatchlist();
+                },
+                error: (error) => {
+                    alert('Error removing from watchlist: ' + (error.error?.message || 'Endpoint not implemented yet'));
+                }
+            });
+        }
+    }
+
     goToUpgrade(): void {
         this.router.navigate(['/upgrade']);
     }
 
 
     onFilterChange(): void {
+        // For dropdown changes (status, language) - immediate update
         this.currentPage = 0;
         this.loadAllShows();
     }
 
+    onNameFilterChange(): void {
+        // For text input (name) - debounced update
+        this.searchSubject.next(this.searchFilter.name || '');
+    }
+
     clearFilters(): void {
         this.searchFilter = {
-            name: '',
-            status: '',
-            language: ''
+            name: undefined,
+            status: undefined,
+            language: undefined
         };
         this.currentPage = 0;
         this.loadAllShows();
     }
 
-    changePage(page: number): void {
-        this.currentPage = page;
-        this.loadAllShows();
-    }
 
     goToShowDetails(showId: number): void {
         this.router.navigate(['/show', showId]);
@@ -544,5 +668,10 @@ export class DashboardComponent implements OnInit {
 
     logout(): void {
         this.authService.logout();
+        this.router.navigate(['/login']);
+    }
+
+    goToAdmin(): void {
+        this.router.navigate(['/admin']);
     }
 }

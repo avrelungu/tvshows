@@ -58,7 +58,14 @@ public class TvShowSpecification {
                     .map(String::toLowerCase)
                     .toList();
 
-            return genreJoin.get("name").in(lowerGenres);
+            return cb.lower(genreJoin.get("name")).in(lowerGenres);
+        };
+    }
+
+    public static Specification<TvShow> hasIds(List<Long> ids) {
+        return (root, query, cb) -> {
+            if (ids == null || ids.isEmpty()) return null;
+            return root.get("tvShowId").in(ids);
         };
     }
 }

@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, Observable, tap } from 'rxjs';
-import { User, LoginUser, SignUpRequest, LoginRequest } from '../models/user.model';
+import { User, LoginUser, SignUpRequest, LoginRequest, RefreshTokenRequest } from '../models/user.model';
 import { environment } from '../../environments/environment';
 
 @Injectable({
@@ -48,5 +48,40 @@ export class AuthService {
 
     getUser(username: string): Observable<User> {
         return this.http.get<User>(`${this.apiUrl}/auth/${username}`);
+    }
+
+    refreshToken(): Observable<LoginUser> {
+        const currentUser = this.getCurrentUser();
+        if (!currentUser?.refreshToken) {
+            throw new Error('No refresh token available');
+        }
+
+        const refreshRequest: RefreshTokenRequest = {
+            refreshToken: currentUser.refreshToken
+        };
+
+        return this.http.post<LoginUser>(`${this.apiUrl}/auth/refresh`, refreshRequest)
+            .pipe(
+                tap(user => {
+                    localStorage.setItem('currentUser', JSON.stringify(user));
+                    this.currentUserSubject.next(user);
+                })
+            );
+    }
+
+    getAccessToken(): string | null {
+        return this.getCurrentUser()?.token || null;
+    }
+
+    getRefreshToken(): string | null {
+        return this.getCurrentUser()?.refreshToken || null;
+    }
+
+    getAllUsers(): Observable<User[]> {
+        return this.http.get<User[]>(`${this.apiUrl}/auth/users`);
+    }
+
+    promoteToAdmin(username: string): Observable<User> {
+        return this.http.post<User>(`${this.apiUrl}/auth/promote/${username}`, {});
     }
 }

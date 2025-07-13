@@ -8,6 +8,7 @@ export interface User {
 
 export interface LoginUser extends User {
     token: string;
+    refreshToken: string;
 }
 
 export interface UserProfile {
@@ -37,4 +38,8 @@ export interface LoginRequest {
 export interface UpgradeProfileRequest {
     username: string;
     memberType: string;
+}
+
+export interface RefreshTokenRequest {
+    refreshToken: string;
 }

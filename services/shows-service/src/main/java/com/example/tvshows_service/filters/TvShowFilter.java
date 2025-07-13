@@ -25,6 +25,7 @@ public class TvShowFilter {
     private String sortBy = "id";
     private String sortOrder = "asc";
     private List<String> genres;
+    private List<Long> ids;
 
     @Override
     public int hashCode() {

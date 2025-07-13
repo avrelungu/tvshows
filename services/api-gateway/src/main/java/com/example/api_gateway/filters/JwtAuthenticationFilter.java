@@ -26,7 +26,8 @@ public class JwtAuthenticationFilter implements GlobalFilter, Ordered {
 
     private static final List<String> EXCLUDED_PATHS = List.of(
             "/api/auth/login",
-            "/api/auth/register"
+            "/api/auth/register",
+            "/api/auth/refresh"
     );
 
     public JwtAuthenticationFilter(JwtService jwtService) {
@@ -35,7 +36,6 @@ public class JwtAuthenticationFilter implements GlobalFilter, Ordered {
 
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
-        log.info("ajunge pe aici");
         ServerHttpRequest request = exchange.getRequest();
 
         if (isExcludedPath(request.getPath().toString())) {
@@ -51,7 +51,6 @@ public class JwtAuthenticationFilter implements GlobalFilter, Ordered {
         String token = authHeader.substring(7);
 
         try {
-            log.info("ajunge pe aici x2");
             Claims claims = jwtService.verifyToken(token);
 
             String username = claims.getIssuer();

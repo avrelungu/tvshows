@@ -41,6 +41,8 @@ public class ReviewService {
         Review review = reviewMapper.toModel(storeReviewDto);
         review.setUsername(username);
         review.setTvShowId(tvShowId);
+        review.setIsApproved(false); // Reviews need admin approval
+        review.setIsFlagged(false);  // Not flagged by default
 
         try {
             reviewRepository.save(review);

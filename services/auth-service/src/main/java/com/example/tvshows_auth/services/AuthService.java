@@ -7,11 +7,13 @@ import com.example.tvshows_auth.exceptions.AppException;
 import com.example.tvshows_auth.exceptions.UnsupportedVersionException;
 import com.example.tvshows_auth.mappers.UserMapper;
 import com.example.tvshows_auth.repositories.UserRepository;
+import com.example.tvshows_auth.enums.Role;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Optional;
 
 @Slf4j
@@ -41,11 +43,14 @@ public class AuthService {
     private LoginUserDto loginV1(CredentialDto credentialDto) {
         User user = userRepository.findByUsername(credentialDto.username()).orElseThrow(() -> new AppException("Unknown user", HttpStatus.NOT_FOUND));
 
-        String token = this.userAuthProvider.createToken(userMapper.toUserDto(user));
-
         if (passwordEncoder.matches(credentialDto.password(), user.getPassword())) {
+            UserDto userDto = userMapper.toUserDto(user);
+            String token = this.userAuthProvider.createToken(userDto);
+            String refreshToken = this.userAuthProvider.createRefreshToken(userDto);
+
             LoginUserDto loginUserDto = userMapper.toLoginUserDto(user);
             loginUserDto.setToken(token);
+            loginUserDto.setRefreshToken(refreshToken);
             loginUserDto.setRole(user.getRole());
 
             return loginUserDto;
@@ -93,5 +98,56 @@ public class AuthService {
         }
 
         throw new AppException("Unknown user", HttpStatus.NOT_FOUND);
+    }
+
+    public LoginUserDto refreshToken(String refreshToken) {
+        if (!userAuthProvider.validateRefreshToken(refreshToken)) {
+            throw new AppException("Invalid refresh token", HttpStatus.UNAUTHORIZED);
+        }
+
+        String username = userAuthProvider.getUsernameFromRefreshToken(refreshToken);
+        if (username == null) {
+            throw new AppException("Cannot extract user from refresh token", HttpStatus.UNAUTHORIZED);
+        }
+
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new AppException("User not found", HttpStatus.NOT_FOUND));
+
+        UserDto userDto = userMapper.toUserDto(user);
+        String newAccessToken = userAuthProvider.createToken(userDto);
+        String newRefreshToken = userAuthProvider.createRefreshToken(userDto);
+
+        LoginUserDto loginUserDto = userMapper.toLoginUserDto(user);
+        loginUserDto.setToken(newAccessToken);
+        loginUserDto.setRefreshToken(newRefreshToken);
+        loginUserDto.setRole(user.getRole());
+
+        return loginUserDto;
+    }
+
+    public UserDto promoteToAdmin(String username, String requestingUserRole) {
+        // Check if requesting user is admin
+        if (!requestingUserRole.equals("ADMIN")) {
+            throw new AppException("Only admins can promote users", HttpStatus.FORBIDDEN);
+        }
+
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new AppException("User not found", HttpStatus.NOT_FOUND));
+
+        user.setRole(Role.ADMIN);
+        User savedUser = userRepository.save(user);
+
+        return userMapper.toUserDto(savedUser);
+    }
+
+    public List<UserDto> getAllUsers(String requestingUserRole) {
+        // Check if requesting user is admin
+        if (!requestingUserRole.equals("ADMIN")) {
+            throw new AppException("Only admins can view all users", HttpStatus.FORBIDDEN);
+        }
+
+        return userRepository.findAll().stream()
+                .map(userMapper::toUserDto)
+                .toList();
     }
 }

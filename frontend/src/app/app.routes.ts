@@ -5,7 +5,9 @@ import { DashboardComponent } from './components/dashboard/dashboard.component';
 import { ReviewsComponent } from './components/reviews/review.component';
 import { UpgradeComponent } from './components/upgrade/upgrade.component';
 import { ShowDetailsComponent } from './components/show-details/show-details.component';
+import { AdminPanelComponent } from './components/admin-panel/admin-panel.component';
 import { AuthGuard } from './guards/auth.guard';
+import { AdminGuard } from './guards/admin.guard';
 
 export const routes: Routes = [
     { path: '', redirectTo: '/dashboard', pathMatch: 'full' },
@@ -15,5 +17,6 @@ export const routes: Routes = [
     { path: 'show/:id', component: ShowDetailsComponent, canActivate: [AuthGuard] },
     { path: 'reviews', component: ReviewsComponent, canActivate: [AuthGuard] },
     { path: 'upgrade', component: UpgradeComponent, canActivate: [AuthGuard] },
+    { path: 'admin', component: AdminPanelComponent, canActivate: [AuthGuard, AdminGuard] },
     { path: '**', redirectTo: '/dashboard' }
 ];

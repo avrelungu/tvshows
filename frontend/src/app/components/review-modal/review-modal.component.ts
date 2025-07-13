@@ -30,12 +30,11 @@ import { Review, StoreReviewRequest, UpdateReviewRequest } from '../../models/re
                   type="button"
                   *ngFor="let star of [1,2,3,4,5]; let i = index"
                   class="star-btn"
-                  [class.active]="i < rating"
-                  [class.hover]="i < hoverRating"
+                  [class.active]="(hoverRating > 0 ? i < hoverRating : i < rating)"
                   (click)="setRating(i + 1)"
                   (mouseenter)="setHoverRating(i + 1)"
                   (mouseleave)="clearHoverRating()">
-                  ⭐
+                  ★
                 </button>
               </div>
               <span class="rating-text">{{ getRatingText() }}</span>
@@ -170,17 +169,21 @@ import { Review, StoreReviewRequest, UpdateReviewRequest } from '../../models/re
     .star-btn {
       background: none;
       border: none;
-      font-size: 1.5rem;
+      font-size: 1.8rem;
       cursor: pointer;
       padding: 0.25rem;
       border-radius: 4px;
       transition: all 0.2s ease;
-      color: #d1d5db;
+      color: #e5e7eb; /* Light gray for inactive stars */
     }
 
-    .star-btn.active,
-    .star-btn.hover {
-      color: #fbbf24;
+    .star-btn:hover {
+      transform: scale(1.15);
+      color: #f59e0b; /* Orange on hover */
+    }
+
+    .star-btn.active {
+      color: #f59e0b; /* Orange for active stars */
       transform: scale(1.1);
     }
 

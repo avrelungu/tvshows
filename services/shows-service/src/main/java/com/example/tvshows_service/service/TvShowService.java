@@ -102,7 +102,8 @@ public class TvShowService {
                         TvShowSpecification.premieredAfter(filter.getPremiered()),
                         TvShowSpecification.hasLanguage(filter.getLanguage()),
                         TvShowSpecification.ratingBetween(filter.getMinRating(), filter.getMaxRating()),
-                        TvShowSpecification.hasGenres(filter.getGenres())
+                        TvShowSpecification.hasGenres(filter.getGenres()),
+                        TvShowSpecification.hasIds(filter.getIds())
                 )
                 .filter(Objects::nonNull)
                 .reduce(Specification::and)

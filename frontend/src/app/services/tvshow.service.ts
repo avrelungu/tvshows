@@ -20,9 +20,11 @@ export class TvShowService {
         if (filter) {
             Object.keys(filter).forEach(key => {
                 const value = filter[key as keyof TvShowFilter];
-                if (value !== undefined && value !== null) {
+                if (value !== undefined && value !== null && value !== '') {
                     if (Array.isArray(value)) {
-                        value.forEach(v => params = params.append(key, v));
+                        if (value.length > 0) {
+                            value.forEach(v => params = params.append(key, v));
+                        }
                     } else {
                         params = params.set(key, value.toString());
                     }

@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @Slf4j
@@ -43,7 +44,6 @@ public class WatchlistService {
         }
 
 
-
         return watchlistMapper.toListWatchlistDto(watchlists);
     }
 
@@ -57,6 +57,27 @@ public class WatchlistService {
             watchlist.setUserProfile(userProfile);
 
             watchlistRepository.save(watchlist);
+        } catch (Exception e) {
+            throw new AppException(e.getMessage(), HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    public void removeFromWatchList(String username, String tvShowId) throws AppException {
+        try {
+            UserProfile userProfile = userProfileRepository.findByUsername(username)
+                    .orElseThrow(UserProfileNotFoundException::new);
+
+            Integer showId = Integer.parseInt(tvShowId);
+
+            Optional<Watchlist> watchlist = userProfile.getWatchlists().stream().filter(w -> w.getShowId().equals(showId)).findFirst();
+
+            if (watchlist.isPresent()) {
+                userProfile.getWatchlists().remove(watchlist.get());
+
+                watchlistRepository.delete(watchlist.get());
+
+                userProfileRepository.save(userProfile);
+            }
         } catch (Exception e) {
             throw new AppException(e.getMessage(), HttpStatus.BAD_REQUEST);
         }
