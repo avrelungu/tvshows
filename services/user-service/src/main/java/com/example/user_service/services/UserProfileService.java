@@ -9,8 +9,10 @@ import com.example.user_service.exceptions.UserProfileNotFoundException;
 import com.example.user_service.mappers.UserProfileMapper;
 import com.example.user_service.models.UserProfile;
 import com.example.user_service.repositories.UserProfileRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -18,7 +20,11 @@ import org.springframework.web.reactive.function.client.WebClient;
 import java.util.Optional;
 
 @Service
+@Slf4j
 public class UserProfileService {
+
+    @Value("${auth-service.api.url}")
+    private static String authServiceUrl;
     private final UserProfileRepository userProfileRepository;
     private final UserProfileMapper userProfileMapper;
     private final WebClient webClient;

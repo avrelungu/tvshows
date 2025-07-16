@@ -17,6 +17,10 @@ spring:
 api-gateway:
   url: http://localhost:8080
 
+auth-service:
+  api:
+    url: http://localhost:8081
+
 server:
   port: 8082
   compression:

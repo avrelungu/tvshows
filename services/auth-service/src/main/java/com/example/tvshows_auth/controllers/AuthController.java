@@ -8,6 +8,7 @@ import com.example.tvshows_auth.dto.SignUpDto;
 import com.example.tvshows_auth.dto.UserDto;
 import com.example.tvshows_auth.exceptions.UnsupportedVersionException;
 import com.example.tvshows_auth.services.AuthService;
+import com.example.tvshows_auth.services.UserService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -19,12 +20,11 @@ import java.util.List;
 public class AuthController {
 
     private final AuthService authService;
+    private final UserService userService;
 
-    private final UserAuthProvider userAuthProvider;
-
-    public AuthController(AuthService authService, UserAuthProvider userAuthProvider) {
+    public AuthController(AuthService authService, UserService userService) {
         this.authService = authService;
-        this.userAuthProvider = userAuthProvider;
+        this.userService = userService;
     }
 
     @PostMapping("/login")
@@ -51,18 +51,13 @@ public class AuthController {
     @PostMapping("/refresh")
     public ResponseEntity<LoginUserDto> refreshToken(@RequestBody RefreshTokenDto refreshTokenDto) {
         LoginUserDto loginUserDto = authService.refreshToken(refreshTokenDto.getRefreshToken());
+
         return ResponseEntity.ok(loginUserDto);
     }
 
     @PostMapping("/promote/{username}")
     public ResponseEntity<UserDto> promoteToAdmin(@PathVariable String username, @RequestHeader(name = "X-Auth-Role") String role) {
-        UserDto userDto = authService.promoteToAdmin(username, role);
+        UserDto userDto = userService.promoteToAdmin(username, role);
         return ResponseEntity.ok(userDto);
-    }
-
-    @GetMapping("/users")
-    public ResponseEntity<List<UserDto>> getAllUsers(@RequestHeader(name = "X-Auth-Role") String role) {
-        List<UserDto> users = authService.getAllUsers(role);
-        return ResponseEntity.ok(users);
     }
 }

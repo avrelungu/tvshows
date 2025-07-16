@@ -33,9 +33,10 @@ public class ReviewController {
             @RequestBody StoreReviewDto storeReviewDto,
             @PathVariable Long tvShowId,
             @PathVariable String username,
-            @RequestHeader(name = "X-Auth-Role", defaultValue = "") String role
+            @RequestHeader(name = "X-Auth-Role", defaultValue = "") String role,
+            @RequestHeader(name = "X-Auth-Membership", defaultValue = "") String userMembership
     ) throws ActionNotAuthorized {
-        reviewService.storeReview(storeReviewDto, tvShowId, username, role);
+        reviewService.storeReview(storeReviewDto, tvShowId, username, role, userMembership);
 
         return ResponseEntity.noContent().build();
     }

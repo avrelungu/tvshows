@@ -2,20 +2,21 @@ export interface User {
     id: string;
     username: string;
     email: string;
-    role: 'FREE' | 'PREMIUM' | 'ADMIN';
+    role: string;
     token?: string;
 }
 
 export interface LoginUser extends User {
     token: string;
     refreshToken: string;
+    membership: string;
 }
 
 export interface UserProfile {
     id: string;
     username: string;
     email: string;
-    memberType: 'FREE' | 'PREMIUM' | 'ADMIN';
+    membership: string;
     firstName: string;
     lastName: string;
 }
@@ -26,8 +27,8 @@ export interface SignUpRequest {
     username: string;
     email: string;
     password: string;
-    memberType: string;
     role: string;
+    membership: string;
 }
 
 export interface LoginRequest {
@@ -37,7 +38,7 @@ export interface LoginRequest {
 
 export interface UpgradeProfileRequest {
     username: string;
-    memberType: string;
+    membership: string;
 }
 
 export interface RefreshTokenRequest {

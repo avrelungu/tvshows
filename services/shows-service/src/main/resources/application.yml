@@ -33,10 +33,10 @@ redis:
   cache-keys:
     top-rated-shows:
       cache-key: "top-rated-shows"
-      ttl: 30
+
     filtered-shows:
       cache-key: "tv-shows:filtered"
-      ttl: 30
+
 
 api-gateway:
   url: http://localhost:8080

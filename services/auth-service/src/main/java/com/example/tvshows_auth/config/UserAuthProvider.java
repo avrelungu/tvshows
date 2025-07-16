@@ -42,6 +42,7 @@ public class UserAuthProvider {
                 .withClaim("firstName", user.getFirstName())
                 .withClaim("lastName", user.getLastName())
                 .withClaim("role", user.getRole())
+                .withClaim("membership", user.getMembership())
                 .sign(Algorithm.HMAC256(secretKey));
 
     }

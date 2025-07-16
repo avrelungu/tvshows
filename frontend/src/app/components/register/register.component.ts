@@ -274,8 +274,8 @@ export class RegisterComponent {
         username: '',
         email: '',
         password: '',
-        memberType: 'FREE',
-        role: 'FREE'
+        membership: 'FREE',
+        role: 'USER'
     };
     loading = false;
     errorMessage = '';

@@ -10,22 +10,18 @@ import { RouterLink } from '@angular/router';
     <div class="user-dropdown" [class.open]="isOpen">
       <button class="user-avatar" (click)="toggleDropdown()">
         <span class="initials">{{ userInitials }}</span>
-        <span class="role-badge" [class]="userRole?.toLowerCase()">{{ userRole }}</span>
+        <span class="role-badge" [class]="userMembershipType?.toLowerCase()">{{ userMembershipType }}</span>
       </button>
 
       <div class="dropdown-menu" *ngIf="isOpen">
         <div class="user-info">
           <span class="username">{{ username }}</span>
-          <span class="role">{{ userRole }}</span>
+          <span class="role">{{ userMembershipType }}</span>
         </div>
         <div class="menu-divider"></div>
         <a routerLink="/dashboard" (click)="closeDropdown()" class="menu-item">
           <span class="menu-icon">📊</span>
           Dashboard
-        </a>
-        <a routerLink="/dashboard" fragment="watchlist" (click)="closeDropdown()" class="menu-item">
-          <span class="menu-icon">📺</span>
-          Watchlist
         </a>
         <a routerLink="/reviews" (click)="closeDropdown()" class="menu-item">
           <span class="menu-icon">⭐</span>
@@ -35,9 +31,17 @@ import { RouterLink } from '@angular/router';
             routerLink="/upgrade"
             (click)="closeDropdown()"
             class="menu-item upgrade-item"
-            *ngIf="userRole === 'FREE'">
+            *ngIf="userMembershipType === 'FREE'">
           <span class="menu-icon">⬆️</span>
           Upgrade to Premium
+        </a>
+        <a
+            routerLink="/admin"
+            (click)="closeDropdown()"
+            class="menu-item upgrade-item"
+            *ngIf="userRole === 'ADMIN'">
+          <span class="menu-icon">⬆️</span>
+          Admin dashboard
         </a>
         <div class="menu-divider"></div>
         <button (click)="onLogout()" class="menu-item logout-item">
@@ -209,6 +213,7 @@ import { RouterLink } from '@angular/router';
 })
 export class UserDropdownComponent {
   @Input() username: string = '';
+  @Input() userMembershipType: string = '';
   @Input() userRole: string = '';
   @Output() logout = new EventEmitter<void>();
 

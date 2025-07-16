@@ -4,9 +4,8 @@ import lombok.Getter;
 
 @Getter
 public enum Role {
-    FREE("FREE"),
-    PREMIUM("PREMIUM"),
-    ADMIN("ADMIN");
+    ADMIN("ADMIN"),
+    USER("USER");
 
     private final String value;
 

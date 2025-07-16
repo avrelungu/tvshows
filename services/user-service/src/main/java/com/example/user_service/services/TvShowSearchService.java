@@ -1,5 +1,6 @@
 package com.example.user_service.services;
 
+import com.example.user_service.dto.StoreSearchHistoryUserEvent;
 import com.example.user_service.dto.StoreShowsSearchDto;
 import com.example.user_service.dto.TvShowSearchHistoryDto;
 import com.example.user_service.exceptions.UserProfileNotFoundException;
@@ -9,7 +10,9 @@ import com.example.user_service.models.UserProfile;
 import com.example.user_service.repositories.TvShowSearchHistoryRepository;
 import com.example.user_service.repositories.UserProfileRepository;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -20,16 +23,17 @@ public class TvShowSearchService {
     private final UserProfileRepository userProfileRepository;
     private final TvShowSearchHistoryRepository tvShowSearchHistoryRepository;
     private final TvShowSearchHistoryMapper tvShowSearchHistoryMapper;
+    private final ApplicationEventPublisher applicationEventPublisher;
 
     public TvShowSearchService(
             UserProfileRepository userProfileRepository,
             TvShowSearchHistoryRepository tvShowSearchHistoryRepository,
-            TvShowSearchHistoryMapper tvShowSearchHistoryMapper) {
+            TvShowSearchHistoryMapper tvShowSearchHistoryMapper, ApplicationEventPublisher applicationEventPublisher) {
         this.userProfileRepository = userProfileRepository;
         this.tvShowSearchHistoryRepository = tvShowSearchHistoryRepository;
         this.tvShowSearchHistoryMapper = tvShowSearchHistoryMapper;
+        this.applicationEventPublisher = applicationEventPublisher;
     }
-
 
     public void storeTvShowSearch(String username, StoreShowsSearchDto storeShowsSearchDto) throws UserProfileNotFoundException {
         log.info("Storing tv show search for {}", username);
@@ -48,7 +52,7 @@ public class TvShowSearchService {
 
         List<TvShowSearchHistory> tvShowSearchHistoryList = tvShowSearchHistoryRepository.findByUserProfileOrderBySearchTimeDesc(userProfile);
         if (tvShowSearchHistoryList.size() > 10) {
-            tvShowSearchHistoryRepository.deleteAll(tvShowSearchHistoryList.subList(10, tvShowSearchHistoryList.size()));
+            applicationEventPublisher.publishEvent(new StoreSearchHistoryUserEvent(userProfile));
         }
     }
 

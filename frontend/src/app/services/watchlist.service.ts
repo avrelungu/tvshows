@@ -28,10 +28,12 @@ export class WatchlistService {
                     return new Observable<PageResponse<TvShow>>(observer => {
                         observer.next({
                             content: [],
-                            totalElements: 0,
-                            totalPages: 0,
-                            size: size,
-                            number: page
+                            page:{
+                                totalElements: 0,
+                                totalPages: 0,
+                                size: size,
+                                number: page
+                            }
                         });
                         observer.complete();
                     });

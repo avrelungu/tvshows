@@ -546,7 +546,7 @@ export class ShowDetailsComponent implements OnInit {
   }
 
   get canWriteReview(): boolean {
-    return this.currentUser?.role === 'PREMIUM' || this.currentUser?.role === 'ADMIN';
+    return this.currentUser?.membership === 'PREMIUM' || this.currentUser?.role === 'ADMIN';
   }
 
   loadShowDetails(showId: number): void {

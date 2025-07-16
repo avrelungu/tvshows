@@ -14,6 +14,7 @@ import com.example.tvshows_service.specifications.TvShowSpecification;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.*;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
@@ -38,8 +39,6 @@ public class TvShowService {
 
     private final ReviewHelper reviewHelper;
 
-    private final TvShowCacheService tvShowCacheService;
-
     private final TvShowRepository tvShowRepository;
 
     public TvShowService(
@@ -48,8 +47,7 @@ public class TvShowService {
             TvShowMapper tvShowMapper,
             WatchlistHelper watchlistHelper,
             ObjectMapper objectMapper,
-            ReviewHelper reviewHelper,
-            TvShowCacheService tvShowCacheService
+            ReviewHelper reviewHelper
     ) {
         this.tvShowRepository = tvShowRepository;
         this.webClient = webClient;
@@ -57,16 +55,10 @@ public class TvShowService {
         this.watchlistHelper = watchlistHelper;
         this.objectMapper = objectMapper;
         this.reviewHelper = reviewHelper;
-        this.tvShowCacheService = tvShowCacheService;
     }
 
+    @Cacheable(value = "tvShows", key = "#page + ':' + #size" )
     public Page<TvShowDto> getTopRatedShows(int page, int size, String username) throws TvShowsNotFoundException {
-        Page<TvShowDto> cachedPage = tvShowCacheService.getCachedTopRatedShows(page, size);
-
-        if (cachedPage != null) {
-            return cachedPage;
-        }
-
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "rating"));
         Page<TvShowDto> tvShowsPage = tvShowRepository.findAll(pageable)
                 .map(tvShow -> {
@@ -81,18 +73,11 @@ public class TvShowService {
             throw new TvShowsNotFoundException();
         }
 
-        tvShowCacheService.cacheTopRatedShows(page, size, tvShowsPage);
-
         return tvShowsPage;
     }
 
-    public Page<TvShowDto> getTvShows(int page, int size, TvShowFilter filter, String username, String url) throws TvShowsNotFoundException {
-        Page<TvShowDto> cachedPage = tvShowCacheService.getCachedFilteredShows(page, size, filter);
-
-        if (cachedPage != null) {
-            return cachedPage;
-        }
-
+    @Cacheable(value = "filteredTvShows", key = "#page + ':' + #size + ':' + #filter.hashCode() + ':' + #username")
+    public Page<TvShowDto> getTvShows(int page, int size, TvShowFilter filter, String username) throws TvShowsNotFoundException {
         Specification<TvShow> spec = Stream.of(
                         TvShowSpecification.hasName(filter.getName()),
                         TvShowSpecification.hasDescription(filter.getDescription()),
@@ -119,19 +104,6 @@ public class TvShowService {
         if (tvShowPage.isEmpty()) {
             throw new TvShowsNotFoundException();
         }
-
-        tvShowCacheService.cacheFilteredTvShows(page, size, filter, tvShowPage);
-
-        StoreTvShowSearchDto storeTvShowSearchDto = new StoreTvShowSearchDto();
-        storeTvShowSearchDto.setEndpoint(url);
-        storeTvShowSearchDto.setFilters(objectMapper.valueToTree(filter));
-
-        webClient.post()
-                .uri(userServiceUrl + "/api/users/search/store/" + username)
-                .bodyValue(storeTvShowSearchDto)
-                .retrieve()
-                .toBodilessEntity()
-                .block();
 
         return tvShowPage;
     }
@@ -184,5 +156,18 @@ public class TvShowService {
         TvShow tvShow = tvShowRepository.findByTvShowId(tvShowId).orElseThrow(TvShowsNotFoundException::new);
 
         return tvShowMapper.tvShowToDto(tvShow);
+    }
+
+    public void storeFilteredTvShowsSearchHistory(String username, String url, TvShowFilter filter) {
+        StoreTvShowSearchDto storeTvShowSearchDto = new StoreTvShowSearchDto();
+        storeTvShowSearchDto.setEndpoint(url);
+        storeTvShowSearchDto.setFilters(objectMapper.valueToTree(filter));
+
+        webClient.post()
+                .uri(userServiceUrl + "/api/users/search/store/" + username)
+                .bodyValue(storeTvShowSearchDto)
+                .retrieve()
+                .toBodilessEntity()
+                .block();
     }
 }

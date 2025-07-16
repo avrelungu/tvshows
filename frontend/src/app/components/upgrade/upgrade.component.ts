@@ -5,6 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { UserService } from '../../services/user.service';
 import { AuthService } from '../../services/auth.service';
+import { UpgradeService } from '../../services/upgrade.service';
 import { UserProfile, UpgradeProfileRequest } from '../../models/user.model';
 
 @Component({
@@ -328,6 +329,7 @@ export class UpgradeComponent implements OnInit {
     constructor(
         private userService: UserService,
         private authService: AuthService,
+        private upgradeService: UpgradeService,
         private router: Router
     ) {}
 
@@ -335,7 +337,7 @@ export class UpgradeComponent implements OnInit {
         this.currentUser = this.authService.getCurrentUser();
 
         // Redirect if already premium
-        if (this.currentUser?.role === 'PREMIUM') {
+        if (this.currentUser?.membership === 'PREMIUM') {
             this.router.navigate(['/dashboard']);
         }
     }
@@ -346,19 +348,20 @@ export class UpgradeComponent implements OnInit {
         this.loading = true;
         this.errorMessage = '';
 
-        const upgradeData: UpgradeProfileRequest = {
-            username: this.currentUser.username,
-            memberType: 'PREMIUM'
-        };
-
-        this.userService.upgradeProfile(upgradeData).subscribe({
+        this.upgradeService.upgradeUserToPremium(this.currentUser.username).subscribe({
             next: (profile) => {
-                // Update current user role in auth service
-                const updatedUser = { ...this.currentUser, role: 'PREMIUM' };
-                localStorage.setItem('currentUser', JSON.stringify(updatedUser));
-                this.authService['currentUserSubject'].next(updatedUser);
-
-                this.isUpgrading = true;
+                // Refresh the user token to get updated membership info
+                this.authService.refreshUserToken().subscribe({
+                    next: (updatedUser) => {
+                        console.log('Token refreshed with new membership:', updatedUser);
+                        this.isUpgrading = true;
+                    },
+                    error: (error) => {
+                        console.error('Error refreshing token:', error);
+                        // Still show success since upgrade worked
+                        this.isUpgrading = true;
+                    }
+                });
             },
             error: (error) => {
                 this.errorMessage = error.error?.message || 'Upgrade failed. Please try again.';

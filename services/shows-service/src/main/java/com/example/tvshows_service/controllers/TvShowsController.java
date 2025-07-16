@@ -28,7 +28,9 @@ public class TvShowsController {
             @RequestHeader(name = "X-Auth-Username", defaultValue = "") String username,
             HttpServletRequest request
     ) throws TvShowsNotFoundException {
-        Page<TvShowDto> tvShowPage = tvShowService.getTvShows(page, size, tvShowFilter, username, request.getRequestURL().toString());
+        Page<TvShowDto> tvShowPage = tvShowService.getTvShows(page, size, tvShowFilter, username);
+
+        tvShowService.storeFilteredTvShowsSearchHistory(username, request.getRequestURL().toString(), tvShowFilter);
 
         return ResponseEntity.ok(tvShowPage);
     }

@@ -8,11 +8,13 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
     const currentUser = authService.getCurrentUser();
 
     if (currentUser?.token) {
+        console.log(currentUser?.membership)
         const authReq = req.clone({
             setHeaders: {
                 Authorization: `Bearer ${currentUser.token}`,
                 'X-Auth-Username': currentUser.username,
-                'X-Auth-Role': currentUser.role || "FREE"
+                'X-Auth-Role': currentUser?.role || "USER",
+                'X-Auth-Membership': currentUser?.membership || "FREE"
             }
         });
 
@@ -24,11 +26,13 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
                         switchMap(() => {
                             // Retry original request with new token
                             const newUser = authService.getCurrentUser();
+                            console.log(newUser);
                             const retryReq = req.clone({
                                 setHeaders: {
                                     Authorization: `Bearer ${newUser?.token}`,
                                     'X-Auth-Username': newUser?.username || '',
-                                    'X-Auth-Role': newUser?.role || "FREE"
+                                    'X-Auth-Role': newUser?.role || "USER",
+                                    'X-Auth-Membership': newUser?.membership || "FREE"
                                 }
                             });
                             return next(retryReq);

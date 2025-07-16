@@ -10,7 +10,7 @@ export class PremiumGuard implements CanActivate {
 
     canActivate(): boolean {
         const user = this.authService.getCurrentUser();
-        if (user && (user.role === 'PREMIUM' || user.role === 'ADMIN')) {
+        if (user && user.role === 'ADMIN') {
             return true;
         }
 

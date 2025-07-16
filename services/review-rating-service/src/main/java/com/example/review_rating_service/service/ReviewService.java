@@ -4,6 +4,7 @@ import com.example.review_rating_service.dto.ReviewDto;
 import com.example.review_rating_service.dto.ReviewStatsDto;
 import com.example.review_rating_service.dto.StoreReviewDto;
 import com.example.review_rating_service.dto.UpdateReviewDto;
+import com.example.review_rating_service.enums.Membership;
 import com.example.review_rating_service.enums.Role;
 import com.example.review_rating_service.exceptions.ActionNotAuthorized;
 import com.example.review_rating_service.exceptions.ReviewNotFoundException;
@@ -32,17 +33,24 @@ public class ReviewService {
         this.reviewRepository = reviewRepository;
     }
 
-    public void storeReview(StoreReviewDto storeReviewDto, Long tvShowId, String username, String role) throws ActionNotAuthorized {
+    public void storeReview(StoreReviewDto storeReviewDto, Long tvShowId, String username, String role, String membership) throws ActionNotAuthorized {
+        log.info("Store review started with username: {} and role: {}, membership: {}", username, role, membership);
         Role userRole = Role.valueOf(role);
-        if (!userRole.equals(Role.PREMIUM) && !userRole.equals(Role.ADMIN)) {
+        Membership userMembership = Membership.valueOf(membership);
+
+        if (!userMembership.equals(Membership.PREMIUM)) {
             throw new ActionNotAuthorized();
         }
 
         Review review = reviewMapper.toModel(storeReviewDto);
         review.setUsername(username);
         review.setTvShowId(tvShowId);
-        review.setIsApproved(false); // Reviews need admin approval
-        review.setIsFlagged(false);  // Not flagged by default
+        review.setIsApproved(false);
+        review.setIsFlagged(false);
+
+        if (userRole.equals(Role.ADMIN)) {
+            review.setIsFlagged(true);
+        }
 
         try {
             reviewRepository.save(review);

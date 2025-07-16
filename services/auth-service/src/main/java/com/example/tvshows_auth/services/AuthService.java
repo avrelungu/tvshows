@@ -2,6 +2,7 @@ package com.example.tvshows_auth.services;
 
 import com.example.tvshows_auth.config.UserAuthProvider;
 import com.example.tvshows_auth.dto.*;
+import com.example.tvshows_auth.enums.Membership;
 import com.example.tvshows_auth.models.User;
 import com.example.tvshows_auth.exceptions.AppException;
 import com.example.tvshows_auth.exceptions.UnsupportedVersionException;
@@ -45,6 +46,7 @@ public class AuthService {
 
         if (passwordEncoder.matches(credentialDto.password(), user.getPassword())) {
             UserDto userDto = userMapper.toUserDto(user);
+            log.info(userDto.toString());
             String token = this.userAuthProvider.createToken(userDto);
             String refreshToken = this.userAuthProvider.createRefreshToken(userDto);
 
@@ -52,6 +54,10 @@ public class AuthService {
             loginUserDto.setToken(token);
             loginUserDto.setRefreshToken(refreshToken);
             loginUserDto.setRole(user.getRole());
+
+            // Get membership from user service to ensure consistency
+            UserProfileDto userProfileDto = userService.getUserProfile(user.getUsername(), token);
+            loginUserDto.setMembership(Membership.valueOf(userProfileDto.getMemberType()));
 
             return loginUserDto;
         }
@@ -101,6 +107,7 @@ public class AuthService {
     }
 
     public LoginUserDto refreshToken(String refreshToken) {
+        log.info("Refreshing");
         if (!userAuthProvider.validateRefreshToken(refreshToken)) {
             throw new AppException("Invalid refresh token", HttpStatus.UNAUTHORIZED);
         }
@@ -122,32 +129,10 @@ public class AuthService {
         loginUserDto.setRefreshToken(newRefreshToken);
         loginUserDto.setRole(user.getRole());
 
+        UserProfileDto userProfileDto = userService.getUserProfile(user.getUsername(), newAccessToken);
+
+        loginUserDto.setMembership(Membership.valueOf(userProfileDto.getMemberType()));
+        log.info("Refreshed: {}", loginUserDto);
         return loginUserDto;
-    }
-
-    public UserDto promoteToAdmin(String username, String requestingUserRole) {
-        // Check if requesting user is admin
-        if (!requestingUserRole.equals("ADMIN")) {
-            throw new AppException("Only admins can promote users", HttpStatus.FORBIDDEN);
-        }
-
-        User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new AppException("User not found", HttpStatus.NOT_FOUND));
-
-        user.setRole(Role.ADMIN);
-        User savedUser = userRepository.save(user);
-
-        return userMapper.toUserDto(savedUser);
-    }
-
-    public List<UserDto> getAllUsers(String requestingUserRole) {
-        // Check if requesting user is admin
-        if (!requestingUserRole.equals("ADMIN")) {
-            throw new AppException("Only admins can view all users", HttpStatus.FORBIDDEN);
-        }
-
-        return userRepository.findAll().stream()
-                .map(userMapper::toUserDto)
-                .toList();
     }
 }

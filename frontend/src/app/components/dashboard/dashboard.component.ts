@@ -2,6 +2,7 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { TvShowService } from '../../services/tvshow.service';
 import { WatchlistService } from '../../services/watchlist.service';
 import { AuthService } from '../../services/auth.service';
+import { UpgradeService } from '../../services/upgrade.service';
 import { TvShow, PageResponse } from '../../models/tvshow.model';
 import { WatchlistItem } from '../../models/watchlist.model';
 import {NgForOf, NgIf} from "@angular/common";
@@ -15,14 +16,6 @@ import { Subject, debounceTime, distinctUntilChanged, takeUntil } from 'rxjs';
         <div class="dashboard">
             <header class="dashboard-header">
                 <h1>TV Shows Dashboard</h1>
-                <div class="user-info" *ngIf="currentUser">
-                    <span>Welcome, {{ currentUser.username }}!</span>
-                    <span class="member-type">{{ currentUser.role }}</span>
-                    <button *ngIf="currentUser.role === 'ADMIN'" (click)="goToAdmin()" class="admin-btn">
-                        Admin Panel
-                    </button>
-                    <button (click)="logout()" class="logout-btn">Logout</button>
-                </div>
             </header>
 
             <nav class="dashboard-nav">
@@ -69,12 +62,14 @@ import { Subject, debounceTime, distinctUntilChanged, takeUntil } from 'rxjs';
                         </div>
 
                         <select [(ngModel)]="searchFilter.status" (change)="onFilterChange()">
+                            <option value="" disabled selected>Status</option>
                             <option value="">All Status</option>
                             <option value="Running">Running</option>
                             <option value="Ended">Ended</option>
                         </select>
 
                         <select [(ngModel)]="searchFilter.language" (change)="onFilterChange()">
+                            <option value="" disabled selected>Language</option>
                             <option value="">All Languages</option>
                             <option value="English">English</option>
                             <option value="Spanish">Spanish</option>
@@ -109,7 +104,7 @@ import { Subject, debounceTime, distinctUntilChanged, takeUntil } from 'rxjs';
                             {{ loadingMore ? 'Loading...' : 'Load More Shows' }}
                         </button>
                         <p *ngIf="!hasMorePages && allShows.content.length > 0" class="end-message">
-                            You've seen all {{ allShows.totalElements }} shows!
+                            You've seen all {{ allShows.page.totalElements }} shows!
                         </p>
                     </div>
                 </section>
@@ -118,7 +113,7 @@ import { Subject, debounceTime, distinctUntilChanged, takeUntil } from 'rxjs';
                 <section *ngIf="activeSection === 'watchlist'">
                     <div class="section-header">
                         <h2>My Watchlist</h2>
-                        <div class="watchlist-info" *ngIf="currentUser?.role === 'FREE'">
+                        <div class="watchlist-info" *ngIf="currentUser?.membership === 'FREE'">
                             <span class="watchlist-limit">{{ watchlist?.content?.length || 0 }}/10 shows</span>
                             <button class="upgrade-btn" (click)="goToUpgrade()">
                                 Upgrade for Unlimited
@@ -127,7 +122,7 @@ import { Subject, debounceTime, distinctUntilChanged, takeUntil } from 'rxjs';
                     </div>
 
                     <!-- Upgrade Notice for FREE users approaching limit -->
-                    <div class="upgrade-notice" *ngIf="currentUser?.role === 'FREE' && (watchlist?.content?.length || 0) >= 8">
+                    <div class="upgrade-notice" *ngIf="currentUser?.membership === 'FREE' && (watchlist?.content?.length || 0) >= 8">
                         <div class="notice-content">
                             <h3>Almost at your limit!</h3>
                             <p>You have {{ 10 - (watchlist?.content?.length || 0) }} watchlist slots remaining.</p>
@@ -182,6 +177,90 @@ import { Subject, debounceTime, distinctUntilChanged, takeUntil } from 'rxjs';
             display: flex;
             align-items: center;
             gap: 1rem;
+            position: relative;
+        }
+
+        .user-dropdown {
+            position: relative;
+        }
+
+        .user-greeting {
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: 4px;
+            transition: background-color 0.2s ease;
+        }
+
+        .user-greeting:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .dropdown-toggle {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 0.5rem;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.2s ease;
+            width: 35px;
+            height: 35px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .dropdown-toggle:hover {
+            background: #5a67d8;
+            transform: scale(1.05);
+        }
+
+        .dropdown-menu {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            min-width: 180px;
+            z-index: 1000;
+            margin-top: 0.5rem;
+        }
+
+        .dropdown-item {
+            display: block;
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: none;
+            background: none;
+            text-align: left;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+            font-size: 0.875rem;
+            color: #374151;
+        }
+
+        .dropdown-item:hover {
+            background: #f3f4f6;
+        }
+
+        .dropdown-item:first-child {
+            border-radius: 8px 8px 0 0;
+        }
+
+        .dropdown-item:last-child {
+            border-radius: 0 0 8px 8px;
+        }
+
+        .dropdown-item.logout {
+            color: #dc2626;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .dropdown-item.logout:hover {
+            background: #fef2f2;
         }
 
         .member-type {
@@ -482,25 +561,37 @@ export class DashboardComponent implements OnInit, OnDestroy {
     loadingMore = false;
     hasMorePages = true;
     isSearching = false;
+    showUserDropdown = false;
     
     private searchSubject = new Subject<string>();
     private destroy$ = new Subject<void>();
 
     searchFilter = {
-        name: undefined,
-        status: undefined,
-        language: undefined
+        name: '',
+        status: '',
+        language: ''
     };
 
     constructor(
         private tvShowService: TvShowService,
         private watchlistService: WatchlistService,
         private authService: AuthService,
+        private upgradeService: UpgradeService,
         private router: Router
     ) {}
 
     ngOnInit(): void {
-        this.currentUser = this.authService.getCurrentUser();
+        // Subscribe to auth service for real-time user updates
+        this.authService.currentUser$.pipe(
+            takeUntil(this.destroy$)
+        ).subscribe(user => {
+            this.currentUser = user;
+            // Redirect to login if user becomes null (logged out)
+            if (!user) {
+                this.router.navigate(['/login']);
+            }
+        });
+        
         this.loadTopRatedShows();
         this.loadAllShows();
         this.loadWatchlist();
@@ -514,9 +605,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
     private setupSearchDebounce(): void {
         this.searchSubject.pipe(
-            debounceTime(500), // Wait 500ms after user stops typing
-            distinctUntilChanged(), // Only emit if value is different from previous
-            takeUntil(this.destroy$) // Cleanup subscription on destroy
+            debounceTime(500),
+            distinctUntilChanged(),
+            takeUntil(this.destroy$)
         ).subscribe(() => {
             this.isSearching = true;
             this.currentPage = 0;
@@ -531,7 +622,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
     loadTopRatedShows(): void {
         this.tvShowService.getTopRatedShows(0, 12).subscribe({
             next: (shows) => {
-                console.log('vine pana aici aici?');
                 this.topRatedShows = shows;
             },
             error: (error) => {
@@ -545,8 +635,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
         this.hasMorePages = true;
         this.tvShowService.getTvShows(this.currentPage, this.pageSize, this.searchFilter).subscribe({
             next: (shows) => {
+                console.log(shows);
                 this.allShows = shows;
-                this.hasMorePages = shows.number < shows.totalPages - 1;
+                this.hasMorePages = shows.page.number < shows.page.totalPages - 1;
                 this.isSearching = false;
             },
             error: (error) => {
@@ -568,8 +659,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
             next: (shows) => {
                 if (this.allShows) {
                     this.allShows.content = [...this.allShows.content, ...shows.content];
-                    this.allShows.number = shows.number;
-                    this.hasMorePages = shows.number < shows.totalPages - 1;
+                    this.allShows.page.number = shows.page.number;
+                    this.hasMorePages = shows.page.number < shows.page.totalPages - 1;
                 }
                 this.loadingMore = false;
             },
@@ -597,7 +688,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     addToWatchlist(show: TvShow): void {
         if (!this.currentUser?.username) return;
 
-        if (this.currentUser.role === 'FREE' && (this.watchlist?.content?.length || 0) >= 10) {
+        if (this.currentUser.membership === 'FREE' && (this.watchlist?.content?.length || 0) >= 10) {
             if (confirm('You\'ve reached your watchlist limit of 10 shows. Upgrade to Premium for unlimited watchlist. Go to upgrade page?')) {
                 this.goToUpgrade();
             }
@@ -636,7 +727,42 @@ export class DashboardComponent implements OnInit, OnDestroy {
     }
 
     goToUpgrade(): void {
-        this.router.navigate(['/upgrade']);
+        if (!this.currentUser?.username) {
+            alert('User not found. Please log in again.');
+            return;
+        }
+
+        if (confirm('Upgrade to Premium for unlimited watchlist and exclusive features?')) {
+            this.upgradeService.upgradeUserToPremium(this.currentUser.username).subscribe({
+                next: (userProfile) => {
+                    if (userProfile.membership === 'PREMIUM') {
+                        alert('Successfully upgraded to Premium! Refreshing your session...');
+                        
+                        // Refresh the user token to get updated membership info
+                        this.authService.refreshUserToken().subscribe({
+                            next: (updatedUser) => {
+                                console.log('Token refreshed with new membership:', updatedUser);
+                                // The UI will update automatically via currentUser$ subscription
+                            },
+                            error: (error) => {
+                                console.error('Error refreshing token:', error);
+                                alert('Upgrade successful but please refresh the page to see changes.');
+                            }
+                        });
+                    } else {
+                        alert('Upgrade failed - membership not updated.');
+                    }
+                },
+                error: (error) => {
+                    console.error('Error upgrading user:', error);
+                    if (error.status === 400) {
+                        alert('You already have Premium membership!');
+                    } else {
+                        alert('Upgrade failed. Please try again later.');
+                    }
+                }
+            });
+        }
     }
 
 
@@ -653,9 +779,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
     clearFilters(): void {
         this.searchFilter = {
-            name: undefined,
-            status: undefined,
-            language: undefined
+            name: '',
+            status: '',
+            language: ''
         };
         this.currentPage = 0;
         this.loadAllShows();
@@ -668,10 +794,18 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
     logout(): void {
         this.authService.logout();
-        this.router.navigate(['/login']);
+        // Navigation will happen automatically via currentUser$ subscription
     }
 
     goToAdmin(): void {
         this.router.navigate(['/admin']);
+    }
+
+    toggleUserDropdown(): void {
+        this.showUserDropdown = !this.showUserDropdown;
+    }
+
+    closeUserDropdown(): void {
+        this.showUserDropdown = false;
     }
 }

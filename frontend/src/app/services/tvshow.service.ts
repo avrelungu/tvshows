@@ -43,13 +43,10 @@ export class TvShowService {
         let response = new Observable<PageResponse<TvShow>>;
 
         try {
-            console.log("inainte de formarea request-ului");
             response = this.http.get<PageResponse<TvShow>>(`${this.apiUrl}/top-rated`, { params });
         } catch (e) {
-            console.error(`o eroare:${e}`);
+            console.error(`${e}`);
         }
-
-        console.log('prima oara pana aici?');
 
         return response;
     }

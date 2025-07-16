@@ -1,5 +1,6 @@
 package com.example.tvshows_auth.models;
 
+import com.example.tvshows_auth.enums.Membership;
 import com.example.tvshows_auth.enums.Role;
 import jakarta.persistence.*;
 import lombok.*;
@@ -40,7 +41,12 @@ public class User implements UserDetails {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, name = "role")
     @Builder.Default
-    private Role role = Role.FREE;
+    private Role role = Role.USER;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, name = "membership")
+    @Builder.Default
+    private Membership membership = Membership.FREE;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

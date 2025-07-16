@@ -8,7 +8,7 @@ import { filter } from 'rxjs';
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, CommonModule, RouterLink, RouterLinkActive, UserDropdownComponent],
+  imports: [RouterOutlet, CommonModule, UserDropdownComponent],
   template: `
     <div class="app">
       <nav class="main-nav" *ngIf="showNavigation">
@@ -18,6 +18,7 @@ import { filter } from 'rxjs';
         <div class="nav-user" *ngIf="isAuthenticated">
           <app-user-dropdown 
             [username]="currentUser?.username || ''"
+            [userMembershipType]="currentUser?.membership || ''"
             [userRole]="currentUser?.role || ''"
             (logout)="logout()">
           </app-user-dropdown>

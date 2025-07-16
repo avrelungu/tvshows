@@ -4,6 +4,7 @@ import com.example.tvshows_auth.dto.LoginUserDto;
 import com.example.tvshows_auth.dto.SignUpDto;
 import com.example.tvshows_auth.dto.UserDto;
 import com.example.tvshows_auth.dto.UserProfileDto;
+import com.example.tvshows_auth.enums.Membership;
 import com.example.tvshows_auth.enums.Role;
 import com.example.tvshows_auth.models.User;
 import org.mapstruct.Mapper;
@@ -22,5 +23,9 @@ public interface UserMapper {
 
     default String map(Role role) {
         return role == null ? null : role.name();
+    }
+
+    default String map(Membership membership) {
+        return membership == null ? null : membership.name();
     }
 }

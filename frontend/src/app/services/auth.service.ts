@@ -57,12 +57,13 @@ export class AuthService {
         }
 
         const refreshRequest: RefreshTokenRequest = {
-            refreshToken: currentUser.refreshToken
+            refreshToken: currentUser.refreshToken,
         };
 
         return this.http.post<LoginUser>(`${this.apiUrl}/auth/refresh`, refreshRequest)
             .pipe(
                 tap(user => {
+                    console.log('Refresh token refreshed', user);
                     localStorage.setItem('currentUser', JSON.stringify(user));
                     this.currentUserSubject.next(user);
                 })
@@ -83,5 +84,15 @@ export class AuthService {
 
     promoteToAdmin(username: string): Observable<User> {
         return this.http.post<User>(`${this.apiUrl}/auth/promote/${username}`, {});
+    }
+
+    // Force refresh user token to get updated membership/role info
+    refreshUserToken(): Observable<LoginUser> {
+        return this.refreshToken().pipe(
+            tap(user => {
+                // Update current user with new token and membership info
+                this.currentUserSubject.next(user);
+            })
+        );
     }
 }

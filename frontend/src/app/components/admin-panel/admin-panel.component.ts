@@ -409,24 +409,24 @@ import { User } from '../../models/user.model';
       .admin-panel {
         padding: 1rem;
       }
-      
+
       .panel-header {
         padding: 1.5rem;
       }
-      
+
       .panel-header h1 {
         font-size: 2rem;
       }
-      
+
       .review-header {
         flex-direction: column;
         gap: 1rem;
       }
-      
+
       .review-actions {
         flex-direction: column;
       }
-      
+
       .btn {
         width: 100%;
       }
@@ -549,7 +549,7 @@ import { User } from '../../models/user.model';
       opacity: 0.6;
       cursor: not-allowed;
     }
-    }
+    
   `]
 })
 export class AdminPanelComponent implements OnInit {
@@ -644,10 +644,8 @@ export class AdminPanelComponent implements OnInit {
   }
 
   private updateStatistics(): void {
-    // Simple statistics based on current data
-    // In a real application, you would have dedicated endpoints for comprehensive stats
-    this.totalReviews = this.pendingReviews.length; // This would include all reviews
-    this.approvedReviews = 0; // This would come from an endpoint
+    this.totalReviews = this.pendingReviews.length;
+    this.approvedReviews = 0;
   }
 
   setActiveTab(tab: string): void {
