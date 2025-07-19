@@ -34,7 +34,6 @@ public class ReviewService {
     }
 
     public void storeReview(StoreReviewDto storeReviewDto, Long tvShowId, String username, String role, String membership) throws ActionNotAuthorized {
-        log.info("Store review started with username: {} and role: {}, membership: {}", username, role, membership);
         Role userRole = Role.valueOf(role);
         Membership userMembership = Membership.valueOf(membership);
 
@@ -70,7 +69,6 @@ public class ReviewService {
     }
 
     public ReviewDto getReview(UUID reviewId, UpdateReviewDto updateReviewDto, String role) throws ReviewNotFoundException, ActionNotAuthorized {
-        log.info("Get review role {}", role);
         if (!Role.valueOf(role).equals(Role.ADMIN)) {
             throw new ActionNotAuthorized();
         }

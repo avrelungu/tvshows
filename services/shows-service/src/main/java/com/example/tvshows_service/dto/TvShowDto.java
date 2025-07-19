@@ -6,6 +6,7 @@ import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 import org.springframework.hateoas.RepresentationModel;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @Data
@@ -33,8 +34,8 @@ public class TvShowDto extends RepresentationModel<TvShowDto> {
     // Additional details.
     private int runtime;
     private int averageRuntime;
-    private String premiered;
-    private String ended;
+    private LocalDate premiered;
+    private LocalDate ended;
     private String officialSite;
 
     // Flattened externals.

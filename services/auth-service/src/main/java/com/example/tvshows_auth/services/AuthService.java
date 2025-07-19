@@ -8,13 +8,11 @@ import com.example.tvshows_auth.exceptions.AppException;
 import com.example.tvshows_auth.exceptions.UnsupportedVersionException;
 import com.example.tvshows_auth.mappers.UserMapper;
 import com.example.tvshows_auth.repositories.UserRepository;
-import com.example.tvshows_auth.enums.Role;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
 import java.util.Optional;
 
 @Slf4j
@@ -42,24 +40,12 @@ public class AuthService {
     }
 
     private LoginUserDto loginV1(CredentialDto credentialDto) {
-        User user = userRepository.findByUsername(credentialDto.username()).orElseThrow(() -> new AppException("Unknown user", HttpStatus.NOT_FOUND));
+        User user = findUserByUsername(credentialDto.username());
 
         if (passwordEncoder.matches(credentialDto.password(), user.getPassword())) {
             UserDto userDto = userMapper.toUserDto(user);
             log.info(userDto.toString());
-            String token = this.userAuthProvider.createToken(userDto);
-            String refreshToken = this.userAuthProvider.createRefreshToken(userDto);
-
-            LoginUserDto loginUserDto = userMapper.toLoginUserDto(user);
-            loginUserDto.setToken(token);
-            loginUserDto.setRefreshToken(refreshToken);
-            loginUserDto.setRole(user.getRole());
-
-            // Get membership from user service to ensure consistency
-            UserProfileDto userProfileDto = userService.getUserProfile(user.getUsername(), token);
-            loginUserDto.setMembership(Membership.valueOf(userProfileDto.getMemberType()));
-
-            return loginUserDto;
+            return createLoginUserDto(user, userDto);
         }
 
         throw new AppException("Invalid password", HttpStatus.BAD_GATEWAY);
@@ -91,19 +77,35 @@ public class AuthService {
 
         userDto.setToken(userAuthProvider.createToken(userDto));
 
-        UserProfileDto userProfileDto = userService.createUserProfile(signUpDto, userDto);
+        userService.createUserProfile(signUpDto, userDto);
 
         return userDto;
     }
 
     public UserDto getUser(String username) {
-        Optional<User> oUser = userRepository.findByUsername(username);
+        User user = findUserByUsername(username);
+        return userMapper.toUserDto(user);
+    }
 
-        if (oUser.isPresent()) {
-            return userMapper.toUserDto(oUser.get());
-        }
+    private User findUserByUsername(String username) {
+        return userRepository.findByUsername(username)
+                .orElseThrow(() -> new AppException("User not found", HttpStatus.NOT_FOUND));
+    }
 
-        throw new AppException("Unknown user", HttpStatus.NOT_FOUND);
+    private LoginUserDto createLoginUserDto(User user, UserDto userDto) {
+        String token = userAuthProvider.createToken(userDto);
+        String refreshToken = userAuthProvider.createRefreshToken(userDto);
+
+        LoginUserDto loginUserDto = userMapper.toLoginUserDto(user);
+        loginUserDto.setToken(token);
+        loginUserDto.setRefreshToken(refreshToken);
+        loginUserDto.setRole(user.getRole());
+
+        // Get membership from user service to ensure consistency
+        UserProfileDto userProfileDto = userService.getUserProfile(user.getUsername(), token);
+        loginUserDto.setMembership(Membership.valueOf(userProfileDto.getMemberType()));
+
+        return loginUserDto;
     }
 
     public LoginUserDto refreshToken(String refreshToken) {
@@ -117,22 +119,10 @@ public class AuthService {
             throw new AppException("Cannot extract user from refresh token", HttpStatus.UNAUTHORIZED);
         }
 
-        User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new AppException("User not found", HttpStatus.NOT_FOUND));
+        User user = findUserByUsername(username);
 
         UserDto userDto = userMapper.toUserDto(user);
-        String newAccessToken = userAuthProvider.createToken(userDto);
-        String newRefreshToken = userAuthProvider.createRefreshToken(userDto);
 
-        LoginUserDto loginUserDto = userMapper.toLoginUserDto(user);
-        loginUserDto.setToken(newAccessToken);
-        loginUserDto.setRefreshToken(newRefreshToken);
-        loginUserDto.setRole(user.getRole());
-
-        UserProfileDto userProfileDto = userService.getUserProfile(user.getUsername(), newAccessToken);
-
-        loginUserDto.setMembership(Membership.valueOf(userProfileDto.getMemberType()));
-        log.info("Refreshed: {}", loginUserDto);
-        return loginUserDto;
+        return createLoginUserDto(user, userDto);
     }
 }

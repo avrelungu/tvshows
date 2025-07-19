@@ -1,0 +1,90 @@
+version: '3.8'
+
+# Development overrides - this file is automatically loaded by docker-compose
+services:
+  postgres:
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_LOG_STATEMENT: all
+    volumes:
+      - ./data/postgres:/var/lib/postgresql/data
+
+  api-gateway:
+    volumes:
+      - ./services/api-gateway/src:/app/src
+    environment:
+      SPRING_PROFILES_ACTIVE: dev
+      LOGGING_LEVEL_ROOT: DEBUG
+
+  auth-service:
+    volumes:
+      - ./services/auth-service/src:/app/src
+    environment:
+      SPRING_PROFILES_ACTIVE: dev
+      LOGGING_LEVEL_ROOT: DEBUG
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/tvshows?currentSchema=auth_service
+
+  user-service:
+    volumes:
+      - ./services/user-service/src:/app/src
+    environment:
+      SPRING_PROFILES_ACTIVE: dev
+      LOGGING_LEVEL_ROOT: DEBUG
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/tvshows?currentSchema=user_service
+
+  shows-service:
+    volumes:
+      - ./services/shows-service/src:/app/src
+    environment:
+      SPRING_PROFILES_ACTIVE: dev
+      LOGGING_LEVEL_ROOT: DEBUG
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/tvshows?currentSchema=shows_service
+
+  review-service:
+    volumes:
+      - ./services/review-rating-service/src:/app/src
+    environment:
+      SPRING_PROFILES_ACTIVE: dev
+      LOGGING_LEVEL_ROOT: DEBUG
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/tvshows?currentSchema=review_service
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    volumes:
+      - ./frontend/src:/app/src
+      - ./frontend/public:/app/public
+      - /app/node_modules
+    environment:
+      NODE_ENV: development
+    command: npm start
+
+  # Development tools
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: tvshows-pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@tvshows.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "5050:80"
+    depends_on:
+      - postgres
+    networks:
+      - tvshows-network
+    profiles:
+      - dev-tools
+
+  # Mailhog for email testing in development
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: tvshows-mailhog
+    ports:
+      - "1025:1025"  # SMTP
+      - "8025:8025"  # Web UI
+    networks:
+      - tvshows-network
+    profiles:
+      - dev-tools

@@ -4,14 +4,13 @@ import com.example.user_service.dto.StoreUserProfileDto;
 import com.example.user_service.dto.UpgradeUserProfileDto;
 import com.example.user_service.dto.UserProfileDto;
 import com.example.user_service.enums.MemberType;
+import com.example.user_service.exceptions.AlreadyPremiumMemberException;
 import com.example.user_service.exceptions.AppException;
 import com.example.user_service.exceptions.UserProfileNotFoundException;
 import com.example.user_service.mappers.UserProfileMapper;
 import com.example.user_service.models.UserProfile;
 import com.example.user_service.repositories.UserProfileRepository;
 import lombok.extern.slf4j.Slf4j;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -22,18 +21,12 @@ import java.util.Optional;
 @Service
 @Slf4j
 public class UserProfileService {
-
-    @Value("${auth-service.api.url}")
-    private static String authServiceUrl;
     private final UserProfileRepository userProfileRepository;
     private final UserProfileMapper userProfileMapper;
-    private final WebClient webClient;
-    private final Logger logger = LoggerFactory.getLogger(UserProfileService.class);
 
-    public UserProfileService(UserProfileRepository userProfileRepository, UserProfileMapper userProfileMapper, WebClient webClient) {
+    public UserProfileService(UserProfileRepository userProfileRepository, UserProfileMapper userProfileMapper) {
         this.userProfileRepository = userProfileRepository;
         this.userProfileMapper = userProfileMapper;
-        this.webClient = webClient;
     }
 
     public UserProfile storeUserProfile(StoreUserProfileDto storeUserProfileDto) throws AppException {
@@ -68,7 +61,7 @@ public class UserProfileService {
         UserProfile userProfile = oUserProfile.get();
 
         if (userProfile.getMemberType() == MemberType.PREMIUM) {
-            throw new AppException(userProfile.getUsername() + " already has a PREMIUM membership", HttpStatus.BAD_REQUEST);
+            throw new AlreadyPremiumMemberException(userProfile.getUsername());
         }
 
         userProfile.setMemberType(MemberType.PREMIUM);

@@ -19,7 +19,7 @@ public enum Membership {
                 return membership;
             }
         }
-        throw new IllegalArgumentException("Unknown role: " + value);
+        throw new IllegalArgumentException("Unknown membership: " + value);
     }
 }
 

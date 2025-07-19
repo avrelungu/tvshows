@@ -20,9 +20,14 @@ import java.util.UUID;
 @Component
 @Slf4j
 public class UserAuthProvider {
+    private final JwtProperties jwtProperties;
 
     @Value("${jwt.secret}")
     private String secretKey;
+
+    public UserAuthProvider(JwtProperties jwtProperties) {
+        this.jwtProperties = jwtProperties;
+    }
 
     @PostConstruct
     protected void init() {
@@ -31,32 +36,31 @@ public class UserAuthProvider {
 
     public String createToken(UserDto user) {
         Date now = Date.from(Instant.now());
-        Date validity = new Date(now.getTime() + 1000 * 60 * 30); // 30 minutes
+        Date validity = new Date(now.getTime() + jwtProperties.getAccessTokenExpiration() * 1000);
 
-        log.info("user role {}", user.getRole());
-
+        JwtProperties.Claims claims = jwtProperties.getClaims();
         return JWT.create()
                 .withIssuer(user.getUsername())
                 .withIssuedAt(now)
                 .withExpiresAt(validity)
-                .withClaim("firstName", user.getFirstName())
-                .withClaim("lastName", user.getLastName())
-                .withClaim("role", user.getRole())
-                .withClaim("membership", user.getMembership())
+                .withClaim(claims.getFirstName(), user.getFirstName())
+                .withClaim(claims.getLastName(), user.getLastName())
+                .withClaim(claims.getRole(), user.getRole())
+                .withClaim(claims.getMembership(), user.getMembership())
                 .sign(Algorithm.HMAC256(secretKey));
-
     }
 
     public String createRefreshToken(UserDto user) {
         Date now = Date.from(Instant.now());
-        Date validity = new Date(now.getTime() + 1000L * 60 * 60 * 24 * 7);
+        Date validity = new Date(now.getTime() + jwtProperties.getRefreshTokenExpiration() * 1000);
 
+        JwtProperties.Claims claims = jwtProperties.getClaims();
         return JWT.create()
                 .withIssuer(user.getUsername())
                 .withIssuedAt(now)
                 .withExpiresAt(validity)
-                .withClaim("tokenId", UUID.randomUUID().toString())
-                .withClaim("type", "refresh")
+                .withClaim(claims.getTokenId(), UUID.randomUUID().toString())
+                .withClaim(claims.getType(), claims.getRefreshType())
                 .sign(Algorithm.HMAC256(secretKey));
     }
 
@@ -66,7 +70,7 @@ public class UserAuthProvider {
             JWTVerifier verifier = JWT.require(algorithm).build();
             DecodedJWT jwt = verifier.verify(token);
             
-            return "refresh".equals(jwt.getClaim("type").asString());
+            return jwtProperties.getClaims().getRefreshType().equals(jwt.getClaim(jwtProperties.getClaims().getType()).asString());
         } catch (Exception e) {
             log.error("Invalid refresh token: {}", e.getMessage());
             return false;
@@ -94,8 +98,9 @@ public class UserAuthProvider {
 
         UserDto user = new UserDto();
         user.setUsername(jwt.getIssuer());
-        user.setFirstName(jwt.getClaim("firstName").asString());
-        user.setLastName(jwt.getClaim("lastName").asString());
+        JwtProperties.Claims claims = jwtProperties.getClaims();
+        user.setFirstName(jwt.getClaim(claims.getFirstName()).asString());
+        user.setLastName(jwt.getClaim(claims.getLastName()).asString());
 
         return new UsernamePasswordAuthenticationToken(user, "", Collections.emptyList());
     }

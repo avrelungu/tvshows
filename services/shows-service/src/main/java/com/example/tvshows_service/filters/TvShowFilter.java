@@ -5,7 +5,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.util.List;
 
 @Data
@@ -15,8 +15,8 @@ import java.util.List;
 public class TvShowFilter {
     private String name;
     private String description;
-    private LocalDateTime premiered;
-    private LocalDateTime ended;
+    private LocalDate premiered;
+    private LocalDate ended;
     private Integer minRating;
     private Integer maxRating;
     private String status;

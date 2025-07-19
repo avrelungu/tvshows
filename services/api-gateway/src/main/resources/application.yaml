@@ -44,6 +44,29 @@ spring:
 
 jwt:
   secret: a3f9b1c8d4e7f0a3b9c2d1e8f6a7b4c5d3e2f1a9b8c7d6e5f4a3b2c1d0e9f8a7
+  auth:
+    excluded-paths:
+      - /api/auth/login
+      - /api/auth/register
+      - /api/auth/refresh
+
+cors:
+  allowed-origins:
+    - "http://localhost:4200"
+    - "http://localhost:3000"
+  allowed-headers:
+    - "*"
+  allowed-methods:
+    - GET
+    - POST
+    - PUT
+    - DELETE
+    - OPTIONS
+    - HEAD
+  exposed-headers:
+    - "*"
+  allow-credentials: true
+  max-age: 3600
 
 logging:
   level:

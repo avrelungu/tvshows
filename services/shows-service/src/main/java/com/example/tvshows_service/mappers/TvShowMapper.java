@@ -21,14 +21,10 @@ public interface TvShowMapper {
     @Mapping(target = "watchlistUrl", ignore = true)
     TvShowDto tvShowToDto(TvShow tvShow);
 
-    List<TvShowDto> tvShowsToDto(List<TvShow> tvShows);
-
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "tvShowId", source = "id")
     @Mapping(target = "genres", source = "genres")
     TvShow dtoToTvShow(TvShowDto tvShowDto);
-
-    List<TvShow> tvShowsDtoToTvShows(List<TvShowDto> tvShowDtos);
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "tvShowId", source = "id")
@@ -42,21 +38,6 @@ public interface TvShowMapper {
     @Mapping(target = "scheduleDays", source = "schedule.days")
     @Mapping(target = "genres", ignore = true)
     TvShow mazeDtoToTvShow(TvMazeShowDto tvMazeShowDto);
-
-    List<TvShow> mazeDtoToTvShowList(List<TvMazeShowDto> tvMazeShowDtos);
-
-    @Mapping(target = "id", ignore = true)
-    @Mapping(target = "tvShowId", source = "id")
-    @Mapping(target = "rating", source = "rating.average")
-    @Mapping(target = "imageMedium", source = "image.medium")
-    @Mapping(target = "imageOriginal", source = "image.original")
-    @Mapping(target = "imdb", source = "externals.imdb")
-    @Mapping(target = "tvrage", source = "externals.tvrage")
-    @Mapping(target = "thetvdb", source = "externals.thetvdb")
-    @Mapping(target = "scheduleTime", source = "schedule.time")
-    @Mapping(target = "scheduleDays", source = "schedule.days")
-    @Mapping(target = "genres", ignore = true)
-    void updateTvShowFromMazeTvShowDto(TvMazeShowDto tvMazeShowDto, @MappingTarget TvShow tvShow);
 
     @Mapping(target = "description", source = "summary")
     StoreWatchlistDto tvShowToStoreWatchlistDto(TvShow tvShow);
@@ -78,18 +59,4 @@ public interface TvShowMapper {
                 })
                 .collect(Collectors.toSet());
     }
-
-    @Mapping(target = "rating", source = "rating.average")
-    @Mapping(target = "imageMedium", source = "image.medium")
-    @Mapping(target = "imageOriginal", source = "image.original")
-    @Mapping(target = "premiered", expression = "java(dto.getPremiered() != null ? dto.getPremiered().toString() : null)")
-    @Mapping(target = "ended", expression = "java(dto.getEnded() != null ? dto.getEnded().toString() : null)")
-    @Mapping(target = "tvrage", source = "externals.tvrage")
-    @Mapping(target = "thetvdb", source = "externals.thetvdb")
-    @Mapping(target = "imdb", source = "externals.imdb")
-    @Mapping(target = "scheduleTime", source = "schedule.time")
-    @Mapping(target = "scheduleDays", source = "schedule.days")
-    @Mapping(target = "watchlistUrl", ignore = true)
-    @Mapping(target = "reviewUrl", ignore = true)
-    TvShowDto mazeDtoToTvShowDto(TvMazeShowDto dto);
 }

@@ -1,5 +1,7 @@
 package com.example.api_gateway.config;
 
+import lombok.Data;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpHeaders;
@@ -17,29 +19,76 @@ import org.springframework.web.server.WebFilterChain;
 import java.util.List;
 
 @Configuration
+@Data
+@ConfigurationProperties(prefix = "cors")
 public class CorsConfig {
+
+    private List<String> allowedOrigins;
+    private List<String> allowedHeaders;
+    private List<String> allowedMethods;
+    private List<String> exposedHeaders;
+    private boolean allowCredentials;
+    private long maxAge;
+
+    // Getters and setters
+    public List<String> getAllowedOrigins() {
+        return allowedOrigins;
+    }
+
+    public void setAllowedOrigins(List<String> allowedOrigins) {
+        this.allowedOrigins = allowedOrigins;
+    }
+
+    public List<String> getAllowedHeaders() {
+        return allowedHeaders;
+    }
+
+    public void setAllowedHeaders(List<String> allowedHeaders) {
+        this.allowedHeaders = allowedHeaders;
+    }
+
+    public List<String> getAllowedMethods() {
+        return allowedMethods;
+    }
+
+    public void setAllowedMethods(List<String> allowedMethods) {
+        this.allowedMethods = allowedMethods;
+    }
+
+    public List<String> getExposedHeaders() {
+        return exposedHeaders;
+    }
+
+    public void setExposedHeaders(List<String> exposedHeaders) {
+        this.exposedHeaders = exposedHeaders;
+    }
+
+    public boolean isAllowCredentials() {
+        return allowCredentials;
+    }
+
+    public void setAllowCredentials(boolean allowCredentials) {
+        this.allowCredentials = allowCredentials;
+    }
+
+    public long getMaxAge() {
+        return maxAge;
+    }
+
+    public void setMaxAge(long maxAge) {
+        this.maxAge = maxAge;
+    }
 
     @Bean
     public CorsWebFilter corsWebFilter() {
         CorsConfiguration corsConfig = new CorsConfiguration();
 
-        // Allow your frontend origin
-        corsConfig.setAllowedOrigins(List.of("http://localhost:4200"));
-
-        // Allow all headers (including Authorization, X-Auth-Username, X-Auth-Role)
-        corsConfig.setAllowedHeaders(List.of("*"));
-
-        // Allow all HTTP methods
-        corsConfig.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD"));
-
-        // Expose response headers if needed
-        corsConfig.setExposedHeaders(List.of("*"));
-
-        // Allow credentials (cookies, authorization headers)
-        corsConfig.setAllowCredentials(true);
-
-        // Cache preflight response for 1 hour
-        corsConfig.setMaxAge(3600L);
+        corsConfig.setAllowedOrigins(getAllowedOrigins());
+        corsConfig.setAllowedHeaders(getAllowedHeaders());
+        corsConfig.setAllowedMethods(getAllowedMethods());
+        corsConfig.setExposedHeaders(getExposedHeaders());
+        corsConfig.setAllowCredentials(isAllowCredentials());
+        corsConfig.setMaxAge(getMaxAge());
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", corsConfig);
@@ -54,11 +103,11 @@ public class CorsConfig {
             if (request.getMethod() == HttpMethod.OPTIONS) {
                 ServerHttpResponse response = exchange.getResponse();
                 HttpHeaders headers = response.getHeaders();
-                headers.add("Access-Control-Allow-Origin", "http://localhost:4200");
-                headers.add("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
-                headers.add("Access-Control-Allow-Headers", "*");
-                headers.add("Access-Control-Allow-Credentials", "true");
-                headers.add("Access-Control-Max-Age", "3600");
+                headers.add("Access-Control-Allow-Origin", String.join(",", getAllowedOrigins()));
+                headers.add("Access-Control-Allow-Methods", String.join(",", getAllowedMethods()));
+                headers.add("Access-Control-Allow-Headers", String.join(",", getAllowedHeaders()));
+                headers.add("Access-Control-Allow-Credentials", String.valueOf(isAllowCredentials()));
+                headers.add("Access-Control-Max-Age", String.valueOf(getMaxAge()));
                 response.setStatusCode(HttpStatus.OK);
                 return response.setComplete();
             }

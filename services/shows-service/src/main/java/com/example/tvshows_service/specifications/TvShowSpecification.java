@@ -6,7 +6,7 @@ import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.JoinType;
 import org.springframework.data.jpa.domain.Specification;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.util.List;
 
 public class TvShowSpecification {
@@ -19,11 +19,11 @@ public class TvShowSpecification {
         return (root, query, cb) -> description == null ? null : cb.like(cb.lower(root.get("description")), "%" + description.toLowerCase() + "%");
     }
 
-    public static Specification<TvShow> premieredAfter(LocalDateTime premiered) {
+    public static Specification<TvShow> premieredAfter(LocalDate premiered) {
         return (root, query, cb) -> premiered == null ? null : cb.greaterThanOrEqualTo(root.get("premiered"), premiered);
     }
 
-    public static Specification<TvShow> endedBefore(LocalDateTime ended) {
+    public static Specification<TvShow> endedBefore(LocalDate ended) {
         return (root, query, cb) -> ended == null ? null : cb.lessThanOrEqualTo(root.get("ended"), ended);
     }
 

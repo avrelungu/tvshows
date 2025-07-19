@@ -6,6 +6,7 @@ import com.example.tvshows_auth.dto.UserProfileDto;
 import com.example.tvshows_auth.enums.Membership;
 import com.example.tvshows_auth.enums.Role;
 import com.example.tvshows_auth.exceptions.AppException;
+import com.example.tvshows_auth.exceptions.InsufficientPermissionsException;
 import com.example.tvshows_auth.mappers.UserMapper;
 import com.example.tvshows_auth.models.User;
 import com.example.tvshows_auth.repositories.UserRepository;
@@ -20,6 +21,8 @@ import java.util.Objects;
 
 @Service
 public class UserService {
+    private static final String BEARER_PREFIX = "Bearer ";
+
     private final UserMapper userMapper;
 
     @Value("${api-gateway.url}")
@@ -35,25 +38,24 @@ public class UserService {
         this.userRepository = userRepository;
     }
 
-    public UserProfileDto createUserProfile(SignUpDto signUpDto, UserDto userDto) {
+    public void createUserProfile(SignUpDto signUpDto, UserDto userDto) {
 
         UserProfileDto userProfileDto = userMapper.signUpToUserProfile(signUpDto);
         userProfileDto.setId(userDto.getId());
 
-        return Objects.requireNonNull(webClient.post()
-                        .uri(apiGatewayUrl + "/api/users/profile")
-                        .bodyValue(userProfileDto)
-                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + userDto.getToken())
-                        .retrieve()
-                        .toEntity(UserProfileDto.class)
-                        .block())
-                .getBody();
+        webClient.post()
+                .uri(apiGatewayUrl + "/api/users/profile")
+                .bodyValue(userProfileDto)
+                .header(HttpHeaders.AUTHORIZATION, BEARER_PREFIX + userDto.getToken())
+                .retrieve()
+                .toBodilessEntity()
+                .block();
     }
 
     public UserProfileDto getUserProfile(String username, String token) {
         return Objects.requireNonNull(webClient.get()
                         .uri(apiGatewayUrl + "/api/users/" + username + "/profile")
-                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
+                        .header(HttpHeaders.AUTHORIZATION, BEARER_PREFIX + token)
                         .retrieve()
                         .toEntity(UserProfileDto.class)
                         .block())
@@ -61,8 +63,8 @@ public class UserService {
     }
 
     public List<UserDto> getAllUsers(String requestingUsername, String requestingUserRole) {
-        if (!requestingUserRole.equals("ADMIN")) {
-            throw new AppException("Only admins can view all users", HttpStatus.FORBIDDEN);
+        if (!requestingUserRole.equals(Role.ADMIN.getValue())) {
+            throw new InsufficientPermissionsException(Role.ADMIN.getValue(), "view all users");
         }
 
         return this.userRepository.findAll().stream()
@@ -73,8 +75,8 @@ public class UserService {
 
     public UserDto promoteToAdmin(String username, String requestingUserRole) {
         // Check if requesting user is admin
-        if (!requestingUserRole.equals("ADMIN")) {
-            throw new AppException("Only admins can promote users", HttpStatus.FORBIDDEN);
+        if (!requestingUserRole.equals(Role.ADMIN.getValue())) {
+            throw new InsufficientPermissionsException(Role.ADMIN.getValue(), "promote users");
         }
 
         User user = userRepository.findByUsername(username)

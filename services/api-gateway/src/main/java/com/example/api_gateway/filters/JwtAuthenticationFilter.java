@@ -1,5 +1,6 @@
 package com.example.api_gateway.filters;
 
+import com.example.api_gateway.config.JwtAuthProperties;
 import com.example.api_gateway.service.JwtService;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
@@ -17,21 +18,18 @@ import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
 import java.nio.charset.StandardCharsets;
-import java.util.List;
 
 @Component
 @Slf4j
 public class JwtAuthenticationFilter implements GlobalFilter, Ordered {
     private final JwtService jwtService;
+    private final JwtAuthProperties jwtAuthProperties;
 
-    private static final List<String> EXCLUDED_PATHS = List.of(
-            "/api/auth/login",
-            "/api/auth/register",
-            "/api/auth/refresh"
-    );
+    private static final String BEARER_PREFIX = "Bearer ";
 
-    public JwtAuthenticationFilter(JwtService jwtService) {
+    public JwtAuthenticationFilter(JwtService jwtService, JwtAuthProperties jwtAuthProperties) {
         this.jwtService = jwtService;
+        this.jwtAuthProperties = jwtAuthProperties;
     }
 
     @Override
@@ -44,11 +42,11 @@ public class JwtAuthenticationFilter implements GlobalFilter, Ordered {
 
         String authHeader = request.getHeaders().getFirst(HttpHeaders.AUTHORIZATION);
 
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+        if (authHeader == null || !authHeader.startsWith(BEARER_PREFIX)) {
             return onError(exchange, "Missing or invalid Authorization header", HttpStatus.UNAUTHORIZED);
         }
 
-        String token = authHeader.substring(7);
+        String token = authHeader.substring(BEARER_PREFIX.length());
 
         try {
             Claims claims = jwtService.verifyToken(token);
@@ -92,7 +90,7 @@ public class JwtAuthenticationFilter implements GlobalFilter, Ordered {
     }
 
     private boolean isExcludedPath(String path) {
-        return EXCLUDED_PATHS.stream().anyMatch(path::startsWith);
+        return jwtAuthProperties.getExcludedPaths().stream().anyMatch(path::startsWith);
     }
 
     @Override

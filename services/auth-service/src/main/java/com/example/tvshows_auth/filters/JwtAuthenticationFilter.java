@@ -12,6 +12,8 @@ import java.io.IOException;
 
 public class JwtAuthenticationFilter implements Filter {
     private final UserAuthProvider userAuthProvider;
+    
+    private static final String BEARER_PREFIX = "Bearer ";
 
     public JwtAuthenticationFilter(UserAuthProvider userAuthProvider) {
         this.userAuthProvider = userAuthProvider;
@@ -24,8 +26,8 @@ public class JwtAuthenticationFilter implements Filter {
 
         String authHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
 
-        if (authHeader != null && authHeader.startsWith("Bearer ")) {
-            String jwtToken = authHeader.substring(7);
+        if (authHeader != null && authHeader.startsWith(BEARER_PREFIX)) {
+            String jwtToken = authHeader.substring(BEARER_PREFIX.length());
 
             try {
                 UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken = userAuthProvider.getToken(jwtToken);

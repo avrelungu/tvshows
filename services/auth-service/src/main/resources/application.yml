@@ -17,6 +17,16 @@ spring:
 
 jwt:
   secret: a3f9b1c8d4e7f0a3b9c2d1e8f6a7b4c5d3e2f1a9b8c7d6e5f4a3b2c1d0e9f8a7
+  access-token-expiration: 1800  # 30 minutes in seconds
+  refresh-token-expiration: 604800  # 7 days in seconds
+  claims:
+    first-name: firstName
+    last-name: lastName
+    role: role
+    membership: membership
+    token-id: tokenId
+    type: type
+    refresh-type: refresh
 
 api-gateway:
   url: http://localhost:8080
