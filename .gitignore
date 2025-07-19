@@ -47,17 +47,38 @@ frontend/yarn-error.log*
 #############################
 # Maven output
 services/**/target/
+services/**/.mvn/wrapper/maven-wrapper.jar
+!services/**/src/main/**/target/
+!services/**/src/test/**/target/
 
 # Gradle output (if used)
 services/**/build/
+!services/**/src/main/**/build/
+!services/**/src/test/**/build/
+
+# Spring Tool Suite
+services/**/.apt_generated
+services/**/.springBeans
+services/**/.sts4-cache
+services/**/.factorypath
 
 # Eclipse (if applicable)
 services/**/.classpath
 services/**/.project
 services/**/.settings/
 
+# NetBeans
+services/**/nbproject/private/
+services/**/nbbuild/
+services/**/dist/
+services/**/nbdist/
+services/**/.nb-gradle/
+
 # IntelliJ compiled output (if any in services)
 services/**/*.iml
+
+# Service documentation (auto-generated)
+services/**/HELP.md
 
 #############################
 # Logs and temporary files

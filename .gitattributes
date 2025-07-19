@@ -1,0 +1,20 @@
+# Maven wrapper scripts should use LF line endings on all platforms
+services/**/mvnw text eol=lf
+
+# Windows batch files should use CRLF line endings
+*.cmd text eol=crlf
+
+# Java source files
+*.java text diff=java
+
+# Configuration files
+*.yml text
+*.yaml text
+*.properties text
+*.xml text
+
+# Documentation
+*.md text
+
+# Scripts
+*.sh text eol=lf
