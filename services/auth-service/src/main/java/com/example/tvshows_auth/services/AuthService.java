@@ -44,7 +44,7 @@ public class AuthService {
 
         if (passwordEncoder.matches(credentialDto.password(), user.getPassword())) {
             UserDto userDto = userMapper.toUserDto(user);
-            log.info(userDto.toString());
+
             return createLoginUserDto(user, userDto);
         }
 
@@ -66,8 +66,6 @@ public class AuthService {
         }
 
         User user = userMapper.signUpToUser(signUpDto);
-
-        log.info("Registered user: {}", user);
 
         user.setPassword(passwordEncoder.encode(signUpDto.password()));
 
@@ -109,7 +107,6 @@ public class AuthService {
     }
 
     public LoginUserDto refreshToken(String refreshToken) {
-        log.info("Refreshing");
         if (!userAuthProvider.validateRefreshToken(refreshToken)) {
             throw new AppException("Invalid refresh token", HttpStatus.UNAUTHORIZED);
         }

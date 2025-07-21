@@ -31,6 +31,7 @@
 		<java.version>24</java.version>
 		<mapstruct.version>1.6.2</mapstruct.version>
 		<jwt.version>4.4.0</jwt.version>
+		<mockito.version>5.14.2</mockito.version>
 	</properties>
 	<dependencies>
 		<dependency>
@@ -129,6 +130,10 @@
 						</exclude>
 					</excludes>
 				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
 			</plugin>
 		</plugins>
 	</build>
